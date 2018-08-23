@@ -935,6 +935,6 @@ function getDetailedCustomMatchData(latestMatchID, playerName, channelID){
 }
 
 function teamRoster(channelID, playerName){
-
+    //work in progress
 }
 // end of file
