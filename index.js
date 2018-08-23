@@ -10,6 +10,10 @@ const APIkey = config.APIkey;
 
 const Discord = require('discord.io');
 const axios = require('axios');
+const greetUser = require('./components/greetUser.js');
+const switchCase = require('./components/getEmoji.js');
+const presence = require('./components/botPresence.js');
+const gameCase = require('./components/gameMode.js');
 
 var lastSeason = "test";
 
@@ -19,15 +23,20 @@ const bot = new Discord.Client({
     autorun: true, // Connect immediately
 });
 
+let greeting = greetUser.greetUser();
+
 // Events
 //https://izy521.gitbooks.io/discord-io/content/Events/Client.html
 
 // When the bot starts
 bot.on('ready', function(event) {
     console.log('Logged in as %s - %s\n', bot.username, bot.id);
-    greetUser();
     initialPresence();
     getSeasons();
+    bot.sendMessage({
+        to: greeting.helloChannel,
+        message: greeting.greetMessage,
+    });
 });
 
 function getSeasons(){
@@ -47,7 +56,6 @@ function getSeasons(){
         var seasonArray = res.data.data;
 
         lastSeason = res.data.data[seasonArray.length -1].id;
-
     })
     .catch(error =>{
         console.log('2', error);
@@ -74,108 +82,22 @@ bot.on('message', (data) => {
 function initialPresence(){
     bot.setPresence({
         game: {
-            type: 3,
-            name: "a cooking show",
+            type: 1,
+            name: presence.presenceRotator(),
         }
     });
 }
 
-setInterval(function presenceRotator(){
-
-    var presenceVar = "";
-    var typeVar = "";
-
-    switch (Math.floor(Math.random() * 7)) {
-        case 0:
-        presenceVar = "PUBG"
-        typeVar = 3
-        break;
-
-        case 2:
-        presenceVar = "your mom shower"
-        typeVar = 3
-        break;
-
-        case 3:
-        presenceVar = "Porn"
-        typeVar = 3
-        break;
-
-        case 4:
-        presenceVar = "with fire"
-        typeVar = 1
-        break;
-
-        case 5:
-        presenceVar = "Pornhub VR Xtreme"
-        typeVar = 1
-        break;
-
-        case 6:
-        presenceVar = "Pornhub VR Anime Edition"
-        typeVar = "3"
-        break;
-
-        case 7:
-        presenceVar = "The adventures of Redvine"
-        typevar = "2"
-        break;
-
-    }
-
+setInterval( function setPresence(){
+    var presenceVar = presence.presenceRotator();
     bot.setPresence({
         game: {
-            type: typeVar,
+            type: 1,
             name: presenceVar,
         }
     });
-}, 300000);
+}, 120000);
 
-
-
-// Random logon message
-function greetUser(){
-
-    var botDev = "466199217199775754";
-
-    var helloChannel = botDev;
-
-    switch (Math.floor(Math.random() * 5)) {
-
-    case 0:
-        bot.sendMessage({
-            to: helloChannel,
-            message:'Me not that kind of orc',
-        })
-        break;
-    case 1:
-        bot.sendMessage({
-            to: helloChannel,
-            message:'Zug Zug',
-        })
-        break;
-    case 2:
-        bot.sendMessage({
-            to: helloChannel,
-            message:'Work Work',
-        })
-        break;
-
-    case 3:
-        bot.sendMessage({
-            to: helloChannel,
-            message:'Something need doing?',
-        })
-        break;
-    case 4:
-        bot.sendMessage({
-            to: helloChannel,
-            message:'Yes?',
-        })
-        break;
-
-    }
-}
 
 // When chat messages are received
 bot.on("message", function (user, userID, channelID, message, rawEvent)
@@ -562,9 +484,6 @@ function getKD(latestMatchID, playerName, channelID){
                     var placement = player.attributes.stats.winPlace;
                     var damageDealt = player.attributes.stats.damageDealt;
                     var kills = player.attributes.stats.kills;
-                    // self.placement = "#" + placement;
-                    //     if(placement == 1){ self.placement = ':trophy:';}
-                    //     else if(placement >= 25){ self.placement = "#" + placement + ":shit:";}
                     self.damageDealt = Math.floor(damageDealt);
                     self.kills = kills;
                     console.log(kills + " kills", "#" + placement, "Damage Dealt: " + self.damageDealt);
@@ -595,8 +514,7 @@ function lastMatch(channelID, playerName){
 
     .then(res => {
 
-    const latestMatchID = res.data.data[0].relationships.matches.data[0].id;
-
+        const latestMatchID = res.data.data[0].relationships.matches.data[0].id;
 
         getMatchData(latestMatchID, playerName, channelID);
 
@@ -764,60 +682,13 @@ function getDetailedMatchData(latestMatchID, playerName, channelID){
             }
         });
 
-    switch(self.kills){
+    var caseVar = self.kills
 
-        case 0:
-        descriptionEmoji = ":shit:"
-        break;
+    var descriptionEmoji = switchCase.getEmoji(caseVar);
 
-        case 1:
-        descriptionEmoji = ":facepalm:"
-        break;
+    var gameVar = gameMode;
 
-        case 2:
-        case 3:
-        descriptionEmoji = ":baby:"
-        break;
-
-        case 4:
-        case 5:
-        descriptionEmoji = ":older_woman:"
-        break;
-
-        case 6:
-        descriptionEmoji = ":older_man:"
-        break;
-
-        case 7:
-        descriptionEmoji = ":spy:"
-        break;
-
-        case 8:
-        descriptionEmoji = ":skull:"
-        break;
-
-        default:
-        descriptionEmoji = ":fire:"
-        break;
-    }
-
-    switch(gameMode){
-        case "squad-fpp":
-        gameMode = "Squad"
-        break;
-
-        case "duo-fpp":
-        gameMode = "Duo"
-        break;
-
-        case "solo-fpp":
-        gameMode = "Solo"
-        break;
-
-        default:
-        gameMode = gameMode
-        break;
-    }
+    gameMode = gameCase.translateGameMode(gameVar);
 
         bot.sendMessage({
         to: channelID,
@@ -981,60 +852,13 @@ function getDetailedCustomMatchData(latestMatchID, playerName, channelID){
             }
         });
 
-    switch(self.kills){
+    var caseVar = self.kills
 
-        case 0:
-        descriptionEmoji = ":shit:"
-        break;
+    var descriptionEmoji = switchCase.getEmoji(caseVar);
 
-        case 1:
-        descriptionEmoji = ":facepalm:"
-        break;
+    var gameVar = gameMode;
 
-        case 2:
-        case 3:
-        descriptionEmoji = ":baby:"
-        break;
-
-        case 4:
-        case 5:
-        descriptionEmoji = ":older_woman:"
-        break;
-
-        case 6:
-        descriptionEmoji = ":older_man:"
-        break;
-
-        case 7:
-        descriptionEmoji = ":spy:"
-        break;
-
-        case 8:
-        descriptionEmoji = ":skull:"
-        break;
-
-        default:
-        descriptionEmoji = ":fire:"
-        break;
-    }
-
-    switch(gameMode){
-        case "squad-fpp":
-        gameMode = "Squad"
-        break;
-
-        case "duo-fpp":
-        gameMode = "Duo"
-        break;
-
-        case "solo-fpp":
-        gameMode = "Solo"
-        break;
-
-        default:
-        gameMode = gameMode
-        break;
-    }
+    gameMode = gameCase.translateGameMode(gameVar);
 
     if(isCustomMatch){
         bot.sendMessage({
