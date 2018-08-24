@@ -103,49 +103,7 @@ setInterval( function setPresence(){
 bot.on("message", function (user, userID, channelID, message, rawEvent)
 {
     //http://www.w3schools.com/jsref/jsref_substring.asp
-    if (message.substring(0, 1) == "!") // if message starts with "!"
-    {
-        var command = message.substring(1); // store the command for cleaner code/reading
-
-        switch(command){
-            //https://izy521.gitbooks.io/discord-io/content/Methods/Channels.html
-            case "hi":
-            bot.sendMessage({
-                to: userID,
-                message: "Me not that kind of orc!"
-            })
-            break;
-
-            case "help":
-            bot.sendMessage({
-                to: channelID,
-                embed: {
-                    title: `Redvine Bot Commands:` ,
-                    fields: [
-                        {
-                            name: `pubg PLAYERNAME`,
-                            value: `swap PLAYERNAME with your ingame name to get a small summary of your last game`,
-                            inline: true,
-                        },
-                        {
-                            name: `inspect PLAYERNAME`,
-                            value: `swap PLAYERNAME with your ingame name to get a detailed summary of your last game`,
-                            inline: true,
-                        },
-                        {
-                            name: `drop MAPNAME`,
-                            value: `swap MAPNAME with a map name to get a random place to drop`,
-                            inline: true,
-                        },
-                    ],
-                    footer: {
-                        text: '',
-                    },
-                }
-            })
-            break;
-        }
-    } else if (message.substring(0, 4) == "pubg"){
+    if (message.substring(0, 4) == "pubg"){
         var playerName = message.substring(5); // store the command for cleaner code/reading
 
         lastMatch(channelID, playerName);
@@ -158,13 +116,36 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
 
         inspectKD(channelID, playerName);
     } else if(message.substring(0, 6) == "custom"){
-        var playerName = message.substring(7);
+        if(message.substring(7, 9) == "id"){
 
-        lastCustom(channelID, playerName);
+            var playerName = message.substring(10);
+            var returnID = true;
+            lastCustom(channelID, playerName, returnID);
+
+        } else {
+
+            var playerName = message.substring(7);
+            var returnID = false;
+            lastCustom(channelID, playerName, returnID);
+
+        }
     } else if(message.substring(0, 6) == "season"){
-        var playerName = message.substring(7);
+            if(message.substring(7, 11) == "solo"){
+                var gameMode = message.substring(7, 11);
+                var playerName = message.substring(12);
+                seasonStats(channelID, playerName, gameMode);
 
-        seasonStats(channelID, playerName);
+            } else if(message.substring(7,10) == "duo"){
+                var gameMode = message.substring(7, 10);
+                var playerName = message.substring(11);
+                seasonStats(channelID, playerName, gameMode);
+
+            } else if(message.substring(7, 12) == "squad"){
+                var gameMode = message.substring(7, 12);
+                var playerName = message.substring(13);
+                seasonStats(channelID, playerName, gameMode);
+
+        }
     } else if (message.substring(0, 4) == "drop"){
         var mapName = message.substring(5);
 
@@ -175,22 +156,38 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
             to: channelID,
             embed: {
                 title: `Redvine Bot Commands:` ,
+                description: 'Swap the value of $value with a corresponding name to get the described response.',
                 fields: [
                     {
-                        name: `pubg PLAYERNAME`,
-                        value: `swap PLAYERNAME with your ingame name to get a small summary of your last game`,
+                        name: `pubg $value`,
+                        value: `Write the ingame name of a player to get a small summary of their last game`,
                         inline: true,
                     },
                     {
-                        name: `inspect PLAYERNAME`,
-                        value: `swap PLAYERNAME with your ingame name to get a detailed summary of your last game`,
+                        name: `inspect $value`,
+                        value: `Write the ingame name of a player to get a detailed summary of their last game`,
                         inline: true,
                     },
                     {
-                        name: `drop MAPNAME`,
-                        value: `swap MAPNAME with a map name to get a random place to drop`,
+                        name: `drop $value`,
+                        value: `Write a map name to get a random place to drop`,
                         inline: true,
                     },
+                    {
+                        name: `custom $value`,
+                        value: `Write the name of a player to get a detailed match summary of his or hers last custom game.`,
+                        inline: true,
+                    },
+                    {
+                        name: 'custom id $value',
+                        value: 'Write the name of a player to get the match id for his or hers last custom game.',
+                        inline: true,
+                    },
+                    {
+                        name: 'season $gamemode $value',
+                        value: 'Write the gamemode you want to see, and name of a player to get a detailed view of their season this far. Example: season duo MikeMyers',
+                        inline: true,
+                    }
                 ],
                 footer: {
                     text: '',
@@ -250,7 +247,7 @@ function dropZone(channelID, mapName){
 }
 
 // get season stats
-function seasonStats(channelID, playerName){
+function seasonStats(channelID, playerName, gameMode){
 
     axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/players?filter[playerNames]=${playerName}`, {
         timeout: 3000,
@@ -265,7 +262,7 @@ function seasonStats(channelID, playerName){
 
     const accountID = res.data.data[0].id;
 
-    getPlayerSquadSeason(channelID, playerName, accountID);
+    getPlayerSeason(channelID, playerName, accountID, gameMode);
 
     })
     .catch(error =>{
@@ -273,7 +270,7 @@ function seasonStats(channelID, playerName){
     })
 }
 
-function getPlayerSquadSeason(channelID, playerName, accountID){
+function getPlayerSeason(channelID, playerName, accountID, gameMode){
 
     axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/players/${accountID}/seasons/${lastSeason}`, {
         timeout: 3000,
@@ -285,30 +282,45 @@ function getPlayerSquadSeason(channelID, playerName, accountID){
     })
 
     .then(res => {
-        // console.log(res.data.data.attributes.gameModeStats['squad-fpp']);
-        var squadSeason = res.data.data.attributes.gameModeStats['squad-fpp'];
+        switch(gameMode){
+        case "solo":
+        var season = res.data.data.attributes.gameModeStats['solo-fpp']
+        break;
 
-        var kills = squadSeason.kills;
-        var assists = squadSeason.assists;
-        var daysPlayed = squadSeason.days;
-        var headShots = squadSeason.headshotKills;
-        var longestKill = Math.round(squadSeason.longestKill * 100) / 100;
-        var timeSurvived = squadSeason.timeSurvived;
-        var wins = squadSeason.wins;
-        var rounds = squadSeason.roundsPlayed;
+        case "duo":
+        var season = res.data.data.attributes.gameModeStats['duo-fpp']
+        break;
+
+        case "squad":
+        var season = res.data.data.attributes.gameModeStats['squad-fpp']
+        break;
+
+        default:
+        var season = res.data.data.attributes.gameModeStats['squad-fpp']
+        break;
+        }
+
+        var kills = season.kills;
+        var assists = season.assists;
+        var daysPlayed = season.days;
+        var headShots = season.headshotKills;
+        var longestKill = Math.round(season.longestKill * 100) / 100;
+        var timeSurvived = season.timeSurvived;
+        var wins = season.wins;
+        var rounds = season.roundsPlayed;
         var kdRatio = Math.round(kills / rounds * 100) / 100;
         var avgSeconds = Math.round(timeSurvived / rounds * 100) / 100;
         var avgMinutes = Math.round(avgSeconds / 60 * 100) / 100;
         var hoursPlayed = Math.round(timeSurvived / 60 / 60 * 10)/10;
-        var damageDealt = squadSeason.damageDealt;
+        var damageDealt = season.damageDealt;
         var avgDamage = Math.round(damageDealt / rounds);
-        var suicides = squadSeason.suicides;
-        var teamKills = squadSeason.teamKills;
-        var topTen = squadSeason.top10s;
+        var suicides = season.suicides;
+        var teamKills = season.teamKills;
+        var topTen = season.top10s;
 
 
         // avg distance
-        var distanceTraveled = squadSeason.rideDistance + squadSeason.walkDistance;
+        var distanceTraveled = season.rideDistance + season.walkDistance;
 
         var avgDistance = Math.round(distanceTraveled / rounds)/1000;
 
@@ -330,7 +342,7 @@ function getPlayerSquadSeason(channelID, playerName, accountID){
         to: channelID,
         embed: {
             title: `Detailed season stats for ${playerName}.`,
-            description: `${playerName} has played at least one squad-game ${daysPlayed} days this season, and has an impressive ${hoursPlayed} hours spread across those days.`,
+            description: `${playerName} has played at least one ${gameMode} game, ${daysPlayed} days this season, and has an impressive ${hoursPlayed} hours spread across those days.`,
             fields:[
                 {
                     name: "Kills:",
@@ -758,7 +770,8 @@ function getDetailedMatchData(latestMatchID, playerName, channelID){
 
 }
 
-function lastCustom(channelID, playerName){
+
+function lastCustom(channelID, playerName, returnID){
     axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/players?filter[playerNames]=${playerName}`, {
         timeout: 3000,
         headers: {
@@ -772,7 +785,13 @@ function lastCustom(channelID, playerName){
 
         const latestMatchID = res.data.data[0].relationships.matches.data[0].id;
 
-        getDetailedCustomMatchData(latestMatchID, playerName, channelID);
+        if(!returnID){
+            getDetailedCustomMatchData(latestMatchID, playerName, channelID);
+            console.log("getDetailedMatchData");
+        } else if(returnID){
+            getLastCustomMatch(latestMatchID, playerName, channelID);
+            console.log("getLastCustomMatch");
+        }
 
     })
     .catch(error =>{
@@ -932,6 +951,40 @@ function getDetailedCustomMatchData(latestMatchID, playerName, channelID){
         message: 'Oops, looks like something went wrong, please try again',
     });
 })
+}
+
+
+
+function getLastCustomMatch(latestMatchID, playerName, channelID){
+        axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/matches/${latestMatchID}`, {
+            timeout: 3000,
+            headers: {
+            'Authorization': APIkey,
+            'Accept' : 'application/vnd.api+json'
+        },
+            responseEncoding: 'json',
+        })
+
+        .then(res => {
+            var matchData = res.data.data.attributes;
+            var gameMode = res.data.data.attributes.gameMode;
+            var isCustomMatch = res.data.data.attributes.isCustomMatch;
+
+        if(isCustomMatch){
+            bot.sendMessage({
+                to: channelID,
+                message: `${playerName} just played a custom match with the ID of: ${latestMatchID} .`,
+            });
+        } else {
+            bot.sendMessage({
+                to: channelID,
+                message: `Looks like ${playerName} has not played a custom match recently. :cold_sweat:`,
+            });
+        }
+    })
+    .catch(error =>{
+        console.log('getLastCustomMatch', error);
+    })
 }
 
 function teamRoster(channelID, playerName){
