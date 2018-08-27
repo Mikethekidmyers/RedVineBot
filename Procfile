@@ -1,1 +1,1 @@
-worker: npm start -process.port=$PORT
+worker: npm start -m redvineapp.worker
