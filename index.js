@@ -336,6 +336,7 @@ function getPlayerSeason(channelID, playerName, accountID, gameMode){
         var killMinutes = Math.floor(avgTimePerKill / 60);
         var killSeconds = Math.round(avgTimePerKill - killMinutes * 60);
 
+        if(rounds > 0){
         bot.sendMessage({
         to: channelID,
         embed: {
@@ -408,7 +409,12 @@ function getPlayerSeason(channelID, playerName, accountID, gameMode){
             },
           }
       });
-
+  } else {
+      bot.sendMessage({
+          to: channelID,
+          message: `Looks like ${playerName} hasn't played any ${gameMode} games this season.`
+      });
+  }
 
     })
     .catch(error =>{
