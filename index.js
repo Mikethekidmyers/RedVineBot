@@ -2,11 +2,11 @@
 
 var config = require('./config.js');
 
-const clientId = config.clientId;
-const clientSecret = config.clientSecret;
-const botUsername = config.botUsername;
-const botToken = config.botToken;
-const APIkey = config.APIkey;
+const clientId = process.env.clientId;
+const clientSecret = process.env.clientSecret;
+const botUsername = process.env.botUsername;
+const botToken = process.env.botToken;
+const APIkey = process.env.APIkey;
 
 const Discord = require('discord.io');
 const axios = require('axios');
