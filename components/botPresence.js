@@ -1,9 +1,9 @@
 
 function presenceRotator(){
 
-    switch (Math.floor(Math.random() * 5)) {
+    switch (Math.floor(Math.random() * 10)) {
         case 0:
-        presenceVar = "PUBG"
+        presenceVar = "PLAYERUNKNOWN'S BATTLEGROUNDS"
         break;
 
         case 1:
@@ -20,6 +20,26 @@ function presenceRotator(){
 
         case 4:
         presenceVar = "Pornhub VR Anime Edition"
+        break;
+
+        case 5:
+        presenceVar = "bot meets world"
+        break;
+
+        case 6:
+        presenceVar = "the Violin"
+        break;
+
+        case 7:
+        presenceVar = "World of Warcraft: Battle for Virginity"
+        break;
+
+        case 8:
+        presenceVar = "Stoke away on a rainy Tuesday night"
+        break;
+
+        case 9:
+        presenceVar = "the stock market"
         break;
     }
 

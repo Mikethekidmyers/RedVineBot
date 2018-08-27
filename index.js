@@ -653,11 +653,37 @@ function getDetailedMatchData(latestMatchID, playerName, channelID){
         var matchData = res.data.data.attributes;
         var gameMode = res.data.data.attributes.gameMode;
 
+        var playerIdArray = [];
+        var rosterIdArray = [];
+        var rosterDataArray = [];
+
+        res.data.included.forEach(function(data){
+            if(data.type == "participant" || data.type == "roster"){
+                if(data.type == "participant"){
+                    playerIdArray.push(data.id);
+                }
+                if(data.type == "roster"){
+                    rosterIdArray.push(data.relationships.participants.data[0].id);
+                }
+
+            }
+        });
+
+        res.data.data.relationships.rosters.data.forEach(function(rosterData){
+            rosterDataArray.push(rosterData.id);
+        });
+
+        // console.log(rosterDataArray);
+        //
+        // console.log(rosterIdArray);
+        //
+        // console.log(playerIdArray);
+
+
         res.data.included.forEach(function(player){
             if(player.type == 'participant'){
                 var name = player.attributes.stats.name;
                 var playerId = player.id;
-
 
                 //time calc
 
@@ -787,10 +813,10 @@ function lastCustom(channelID, playerName, returnID){
 
         if(!returnID){
             getDetailedCustomMatchData(latestMatchID, playerName, channelID);
-            console.log("getDetailedMatchData");
+            // console.log("getDetailedMatchData");
         } else if(returnID){
             getLastCustomMatch(latestMatchID, playerName, channelID);
-            console.log("getLastCustomMatch");
+            // console.log("getLastCustomMatch");
         }
 
     })
@@ -983,7 +1009,7 @@ function getLastCustomMatch(latestMatchID, playerName, channelID){
         }
     })
     .catch(error =>{
-        console.log('getLastCustomMatch', error);
+        console.log(error);
     })
 }
 
