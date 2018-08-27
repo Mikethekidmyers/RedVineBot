@@ -208,7 +208,7 @@ function dropZone(channelID, mapName){
             var rand = miramarArray[Math.floor(Math.random() * miramarArray.length)];
             bot.sendMessage({
                 to: channelID,
-                message: `${landingPhrase} ${rand}`,
+                message: `${landingPhrase}${rand}`,
                 tts: true,
             })
         break;
@@ -219,7 +219,7 @@ function dropZone(channelID, mapName){
             var rand = erangelArray[Math.floor(Math.random() * erangelArray.length)];
             bot.sendMessage({
                 to: channelID,
-                message: `${landingPhrase} ${rand}`,
+                message: `${landingPhrase}${rand}`,
                 tts: true,
             })
         break;
@@ -230,7 +230,7 @@ function dropZone(channelID, mapName){
             var rand = sanhokArray[Math.floor(Math.random() * sanhokArray.length)];
             bot.sendMessage({
                 to: channelID,
-                message: `${landingPhrase} ${rand}`,
+                message: `${landingPhrase}${rand}`,
                 tts: true,
             })
         break;
