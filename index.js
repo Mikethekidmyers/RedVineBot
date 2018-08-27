@@ -1,7 +1,5 @@
 // https://izy521.github.io/discord.io-docs/Discord.Client.html#editChannelInfo
 
-var config = require('./config.js');
-
 const clientId = process.env.clientId;
 const clientSecret = process.env.clientSecret;
 const botUsername = process.env.botUsername;
