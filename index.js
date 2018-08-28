@@ -1,10 +1,20 @@
 // https://izy521.github.io/discord.io-docs/Discord.Client.html#editChannelInfo
+//Dev mode
+    // const config = require('./config.js');
+    // const clientId = config.clientId;
+    // const clientSecret = config.clientSecret;
+    // const botUsername = config.botUsername;
+    // const botToken = config.botToken;
+    // const APIkey = config.APIkey;
+//Dev mode
 
+//Live mode
 const clientId = process.env.clientId;
 const clientSecret = process.env.clientSecret;
 const botUsername = process.env.botUsername;
 const botToken = process.env.botToken;
 const APIkey = process.env.APIkey;
+//Live mode
 
 const Discord = require('discord.io');
 const axios = require('axios');
@@ -306,7 +316,8 @@ function getPlayerSeason(channelID, playerName, accountID, gameMode){
         var timeSurvived = season.timeSurvived;
         var wins = season.wins;
         var rounds = season.roundsPlayed;
-        var kdRatio = Math.round(kills / rounds * 100) / 100;
+        var deaths = season.losses;
+        var kdRatio = Math.round(kills / deaths * 100) / 100;
         var avgSeconds = Math.round(timeSurvived / rounds * 100) / 100;
         var avgMinutes = Math.round(avgSeconds / 60 * 100) / 100;
         var hoursPlayed = Math.round(timeSurvived / 60 / 60 * 10)/10;
@@ -316,6 +327,11 @@ function getPlayerSeason(channelID, playerName, accountID, gameMode){
         var teamKills = season.teamKills;
         var topTen = season.top10s;
 
+        // rating calc
+        var winRating = season.winPoints;
+        var killRating = season.killPoints;
+
+        var overAllRating = Math.round(winRating + (killRating * 0.2));
 
         // avg distance
         var distanceTraveled = season.rideDistance + season.walkDistance;
@@ -341,8 +357,13 @@ function getPlayerSeason(channelID, playerName, accountID, gameMode){
         to: channelID,
         embed: {
             title: `Detailed season stats for ${playerName}.`,
-            description: `${playerName} has played at least one ${gameMode} game, ${daysPlayed} days this season, and has an impressive ${hoursPlayed} hours spread across those days.`,
+            description: `${playerName} has played at least one ${gameMode} game ${daysPlayed} days this season, and has an impressive ${hoursPlayed} hours spread across those days.`,
             fields:[
+                // In case the API gets support for #rank directly from the API
+                // {
+                //     name: "Player Rating:",
+                //     value: `${overAllRating}`,
+                // },
                 {
                     name: "Kills:",
                     value: `${kills}`,
