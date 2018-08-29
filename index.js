@@ -64,6 +64,8 @@ function getSeasons(){
         var seasonArray = res.data.data;
 
         lastSeason = res.data.data[seasonArray.length -1].id;
+
+        console.log(lastSeason);
     })
     .catch(error =>{
         console.log('2', error);
