@@ -202,6 +202,8 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
                 },
             }
         });
+    } else if(message.substring(0, 10) == "new season"){
+        getSeasons();
     }
 
 });
