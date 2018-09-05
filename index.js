@@ -9,11 +9,11 @@
 //Dev mode
 
 //Live mode
-const clientId = process.env.clientId;
-const clientSecret = process.env.clientSecret;
-const botUsername = process.env.botUsername;
-const botToken = process.env.botToken;
-const APIkey = process.env.APIkey;
+    const clientId = process.env.clientId;
+    const clientSecret = process.env.clientSecret;
+    const botUsername = process.env.botUsername;
+    const botToken = process.env.botToken;
+    const APIkey = process.env.APIkey;
 //Live mode
 
 const Discord = require('discord.io');
@@ -160,6 +160,29 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
         var mapName = message.substring(5);
 
         dropZone(channelID, mapName);
+    } else if(message.substring(0, 8) == "getusers"){
+        // console.log(rawEvent.d.id); //this is the id of the message that triggers the command.
+        // console.log(rawEvent.d);
+
+        // shortHand for accessing the server info
+        var shortHand = bot.servers[bot.channels[channelID].guild_id];
+
+        // finds the voice channel the user who called the command is in
+        var voiceChannelID = shortHand.members[userID].voice_channel_id;
+
+        // finds the members of the voice channel
+        var voiceMembers = shortHand.channels[voiceChannelID].members;
+
+        // finds the name of the voice channel
+        var voiceChannelName = shortHand.channels[voiceChannelID].name;
+
+        console.log(shortHand.members);
+
+        bot.sendMessage({
+            to: channelID,
+            message: `You are currently talking smack in ${voiceChannelName}`,
+        });
+
     } else if (message.substring(0, 4) == "help"){
 
         bot.sendMessage({
@@ -1042,4 +1065,12 @@ function getLastCustomMatch(latestMatchID, playerName, channelID){
 function teamRoster(channelID, playerName){
     //work in progress
 }
+
+// Get all users
+
+function getAllUsers(serverID){
+    console.log(bot.servers[serverID]);
+}
+
+
 // end of file
