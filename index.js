@@ -22,8 +22,9 @@ const greetUser = require('./components/greetUser.js');
 const switchCase = require('./components/getEmoji.js');
 const presence = require('./components/botPresence.js');
 const gameCase = require('./components/gameMode.js');
+const fs = require('fs');
 
-var lastSeason = "test";
+let lastSeason = "test";
 
 //https://izy521.gitbooks.io/discord-io/content/Client.html
 const bot = new Discord.Client({
@@ -41,6 +42,7 @@ bot.on('ready', function(event) {
     console.log('Logged in as %s - %s\n', bot.username, bot.id);
     initialPresence();
     getSeasons();
+
     bot.sendMessage({
         to: greeting.helloChannel,
         message: greeting.greetMessage,
@@ -160,29 +162,8 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
         var mapName = message.substring(5);
 
         dropZone(channelID, mapName);
-    } else if(message.substring(0, 8) == "getusers"){
-        // console.log(rawEvent.d.id); //this is the id of the message that triggers the command.
-        // console.log(rawEvent.d);
-
-        // shortHand for accessing the server info
-        var shortHand = bot.servers[bot.channels[channelID].guild_id];
-
-        // finds the voice channel the user who called the command is in
-        var voiceChannelID = shortHand.members[userID].voice_channel_id;
-
-        // finds the members of the voice channel
-        var voiceMembers = shortHand.channels[voiceChannelID].members;
-
-        // finds the name of the voice channel
-        var voiceChannelName = shortHand.channels[voiceChannelID].name;
-
-        console.log(shortHand.members);
-
-        bot.sendMessage({
-            to: channelID,
-            message: `You are currently talking smack in ${voiceChannelName}`,
-        });
-
+    } else if(message.substring(0, 7) == "captain"){
+        chooseCaptain(channelID);
     } else if (message.substring(0, 4) == "help"){
 
         bot.sendMessage({
@@ -220,6 +201,11 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
                         name: 'season $gamemode $value',
                         value: 'Write the gamemode you want to see, and name of a player to get a detailed view of their season this far. Example: season duo MikeMyers',
                         inline: true,
+                    },
+                    {
+                        name: 'captain',
+                        value: 'Write captain to choose a random member from the voice channel to be your team captain',
+                        inline: true,
                     }
                 ],
                 footer: {
@@ -229,6 +215,98 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
         });
     }
 });
+
+//chooses a random captain from the members currently in the voice channel
+
+function chooseCaptain(channelID){
+    // shortHand for accessing the server info
+    var shortHand = bot.servers[bot.channels[channelID].guild_id];
+
+    // finds the voice channel the user who called the command is in
+    var voiceChannelID = shortHand.members[userID].voice_channel_id;
+
+    // finds the members of the voice channel
+    var voiceMembers = shortHand.channels[voiceChannelID].members;
+
+    // finds the name of the voice channel
+    var voiceChannelName = shortHand.channels[voiceChannelID].name;
+
+    // console.log(voiceMembers);
+
+    let userIdArray = [];
+
+    for(let memberID in shortHand.members){
+        if (bot.users[memberID] != undefined){
+            userIdArray.push(bot.users[memberID].id);
+        }
+    }
+
+    let voiceMembersIdArray = [];
+
+    for(let id in userIdArray){
+        let y = userIdArray[id];
+        let stringID = JSON.stringify(userIdArray[id]);
+
+        if(voiceMembers[y] != undefined){
+            if(userIdArray[id] == voiceMembers[y].user_id){
+                voiceMembersIdArray.push(voiceMembers[y].user_id);
+            }
+        }
+    }
+
+    let voiceMembersNickArray = [];
+
+    for(let id in voiceMembersIdArray){
+        for(let memberID in shortHand.members){
+            if(bot.users[memberID] != undefined){
+                if(voiceMembersIdArray[id] == bot.users[memberID].id){
+                    voiceMembersNickArray.push(bot.users[memberID].username);
+                }
+            }
+        }
+    }
+
+    let randomNumber = Math.floor(Math.random()*voiceMembersNickArray.length);
+
+    bot.sendMessage({
+        to: channelID,
+        message: `The captain for this game is ${voiceMembersNickArray[randomNumber]}`,
+        tts: true,
+    });
+
+};
+
+//cant get this to work yet, bot joins channel and starts spamming the end stream message..
+
+function summonBot(voiceChannelID){
+    bot.joinVoiceChannel(voiceChannelID, function(error, events){
+        if (error) return console.error(error);
+
+        bot.getAudioContext(voiceChannelID, function(error, stream){
+            if (error) return console.error(error);
+
+            console.log('WHAT IS STREAM HERE', stream);
+            return;
+
+            fs.createReadStream('workwork.mp3').pipe(stream, { end: false });
+
+            setTimeout(() => {
+                stream.close();
+            }, 1000);
+
+            stream.on('done', function(){
+                console.log('processing finished!');
+            })
+        });
+    });
+};
+
+function dismissBot(voiceChannelID){
+    bot.leaveVoiceChannel(voiceChannelID, function(error, events){
+        if (error) return console.error(error);
+
+    });
+};
 
 function dropZone(channelID, mapName){
     var phraseArray = ["We're heading to ", "We're going to ", "It's hot drop time in ", "It's been a long time since we were in ", "", "Ready, set, ", "Oh how I've missed you ", "Fuck me I hate landing in ", "Let's drop in "];
