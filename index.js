@@ -163,7 +163,7 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
 
         dropZone(channelID, mapName);
     } else if(message.substring(0, 7) == "captain"){
-        chooseCaptain(channelID);
+        chooseCaptain(channelID, userID);
     } else if (message.substring(0, 4) == "help"){
 
         bot.sendMessage({
@@ -218,7 +218,7 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
 
 //chooses a random captain from the members currently in the voice channel
 
-function chooseCaptain(channelID){
+function chooseCaptain(channelID, userID){
     // shortHand for accessing the server info
     var shortHand = bot.servers[bot.channels[channelID].guild_id];
 
