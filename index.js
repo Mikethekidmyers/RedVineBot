@@ -213,6 +213,11 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
                 },
             }
         });
+    } else if(message.substring(0, 10) == "thanks bot") {
+        bot.sendMessage({
+            to: channelID,
+            message: `My pleasure`,
+        });
     }
 });
 
@@ -222,58 +227,63 @@ function chooseCaptain(channelID, userID){
     // shortHand for accessing the server info
     var shortHand = bot.servers[bot.channels[channelID].guild_id];
 
-    // finds the voice channel the user who called the command is in
-    var voiceChannelID = shortHand.members[userID].voice_channel_id;
+    //check if the user is in a voice channel
+    if(shortHand.members[userID].voice_channel_id != undefined){
+        // finds the voice channel the user who called the command is in
+        var voiceChannelID = shortHand.members[userID].voice_channel_id;
 
-    // finds the members of the voice channel
-    var voiceMembers = shortHand.channels[voiceChannelID].members;
+        // finds the members of the voice channel
+        var voiceMembers = shortHand.channels[voiceChannelID].members;
 
-    // finds the name of the voice channel
-    var voiceChannelName = shortHand.channels[voiceChannelID].name;
+        // finds the name of the voice channel
+        var voiceChannelName = shortHand.channels[voiceChannelID].name;
 
-    // console.log(voiceMembers);
+        let userIdArray = [];
 
-    let userIdArray = [];
-
-    for(let memberID in shortHand.members){
-        if (bot.users[memberID] != undefined){
-            userIdArray.push(bot.users[memberID].id);
-        }
-    }
-
-    let voiceMembersIdArray = [];
-
-    for(let id in userIdArray){
-        let y = userIdArray[id];
-        let stringID = JSON.stringify(userIdArray[id]);
-
-        if(voiceMembers[y] != undefined){
-            if(userIdArray[id] == voiceMembers[y].user_id){
-                voiceMembersIdArray.push(voiceMembers[y].user_id);
+        for(let memberID in shortHand.members){
+            if (bot.users[memberID] != undefined){
+                userIdArray.push(bot.users[memberID].id);
             }
         }
-    }
 
-    let voiceMembersNickArray = [];
+        let voiceMembersIdArray = [];
 
-    for(let id in voiceMembersIdArray){
-        for(let memberID in shortHand.members){
-            if(bot.users[memberID] != undefined){
-                if(voiceMembersIdArray[id] == bot.users[memberID].id){
-                    voiceMembersNickArray.push(bot.users[memberID].username);
+        for(let id in userIdArray){
+            let y = userIdArray[id];
+            let stringID = JSON.stringify(userIdArray[id]);
+
+            if(voiceMembers[y] != undefined){
+                if(userIdArray[id] == voiceMembers[y].user_id){
+                    voiceMembersIdArray.push(voiceMembers[y].user_id);
                 }
             }
         }
+
+        let voiceMembersNickArray = [];
+
+        for(let id in voiceMembersIdArray){
+            for(let memberID in shortHand.members){
+                if(bot.users[memberID] != undefined){
+                    if(voiceMembersIdArray[id] == bot.users[memberID].id){
+                        voiceMembersNickArray.push(bot.users[memberID].username);
+                    }
+                }
+            }
+        }
+
+        let randomNumber = Math.floor(Math.random()*voiceMembersNickArray.length);
+
+        bot.sendMessage({
+            to: channelID,
+            message: `The captain for this game is ${voiceMembersNickArray[randomNumber]}`,
+            tts: true,
+        });
+    } else {
+        bot.sendMessage({
+            to: channelID,
+            message: `Looks like you're not in a voice channel, join one and try again!`,
+        });
     }
-
-    let randomNumber = Math.floor(Math.random()*voiceMembersNickArray.length);
-
-    bot.sendMessage({
-        to: channelID,
-        message: `The captain for this game is ${voiceMembersNickArray[randomNumber]}`,
-        tts: true,
-    });
-
 };
 
 //cant get this to work yet, bot joins channel and starts spamming the end stream message..
@@ -285,14 +295,7 @@ function summonBot(voiceChannelID){
         bot.getAudioContext(voiceChannelID, function(error, stream){
             if (error) return console.error(error);
 
-            console.log('WHAT IS STREAM HERE', stream);
-            return;
-
             fs.createReadStream('workwork.mp3').pipe(stream, { end: false });
-
-            setTimeout(() => {
-                stream.close();
-            }, 1000);
 
             stream.on('done', function(){
                 console.log('processing finished!');
