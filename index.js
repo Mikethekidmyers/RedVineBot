@@ -114,8 +114,11 @@ setInterval( function setPresence(){
 // When chat messages are received
 bot.on("message", function (user, userID, channelID, message, rawEvent)
 {
-    //http://www.w3schools.com/jsref/jsref_substring.asp
-    if (message.substring(0, 4) == "pubg"){
+    console.log(userID);
+    if(userID == '142373989770199040'){
+        //if the user is marcus, moves him to the afk channel
+        banishPlayer(userID);
+    } else if (message.substring(0, 4) == "pubg"){
         var playerName = message.substring(5); // store the command for cleaner code/reading
 
         lastMatch(channelID, playerName);
@@ -220,6 +223,15 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
         });
     }
 });
+
+//banishes the user specified in the blackList variable
+function banishPlayer(userID){
+    bot.moveUserTo({
+        serverID: '316340505061359616',
+        userID: userID,
+        channelID: '316341181183295501',
+    });
+}
 
 //chooses a random captain from the members currently in the voice channel
 
