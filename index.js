@@ -1,19 +1,19 @@
 // https://izy521.github.io/discord.io-docs/Discord.Client.html#editChannelInfo
 //Dev mode
-    // const config = require('./config.js');
-    // const clientId = config.clientId;
-    // const clientSecret = config.clientSecret;
-    // const botUsername = config.botUsername;
-    // const botToken = config.botToken;
-    // const APIkey = config.APIkey;
+    const config = require('./config.js');
+    const clientId = config.clientId;
+    const clientSecret = config.clientSecret;
+    const botUsername = config.botUsername;
+    const botToken = config.botToken;
+    const APIkey = config.APIkey;
 //Dev mode
 
 //Live mode
-    const clientId = process.env.clientId;
-    const clientSecret = process.env.clientSecret;
-    const botUsername = process.env.botUsername;
-    const botToken = process.env.botToken;
-    const APIkey = process.env.APIkey;
+    // const clientId = process.env.clientId;
+    // const clientSecret = process.env.clientSecret;
+    // const botUsername = process.env.botUsername;
+    // const botToken = process.env.botToken;
+    // const APIkey = process.env.APIkey;
 //Live mode
 
 const Discord = require('discord.io');
@@ -100,74 +100,71 @@ setInterval( function setPresence(){
 // When chat messages are received
 bot.on("message", function (user, userID, channelID, message, rawEvent)
 {
+    let parameters = message.split(" ");
+
     var shortHand = bot.servers[bot.channels[channelID].guild_id];
 
     if(userID == '142373989770199040'){
         //if the user is marcus, moves him to the afk channel
         gulag.banishPlayer(shortHand, userID);
-    } else if (message.substring(0, 4) == "pubg"){
-        var playerName = message.substring(5); // store the command for cleaner code/reading
+    } else if (parameters[0] == "pubg"){
+        var playerName = parameters[1]; // store the command for cleaner code/reading
 
         lastMatch.lastMatch(bot, axios, APIkey, channelID, playerName);
-    } else if(message.substring(0, 7) == "inspect"){
-        var playerName = message.substring(8);
+    } else if(parameters[0] == "inspect"){
+        var playerName = parameters[1];
 
         inspectGame.inspectGame(bot, axios, APIkey, channelID, playerName);
-    } else if(message.substring(0, 2) == "KD"){
-        var playerName = message.substring(3);
+    } else if(parameters[0] == "KD"){
+        var playerName = parameters[1];
 
         inspectKD.inspectKD(bot, axios, APIkey, channelID, playerName);
-    } else if(message.substring(0, 6) == "custom"){
-        if(message.substring(7, 9) == "id"){
+    } else if(parameters[0] == "custom"){
+        //checks if the player played a custom match as his last match
+        if(parameters[1] == "id"){
 
-            var playerName = message.substring(10);
+            var playerName = parameters[2];
             var returnID = true;
 
             lastCustom.lastCustom(bot, axios, APIkey, channelID, playerName, returnID);
 
         } else {
 
-            var playerName = message.substring(7);
+            var playerName = parameters[2];
             var returnID = false;
 
             lastCustom.lastCustom(bot, axios, APIkey, channelID, playerName, returnID);
 
         }
-    } else if(message.substring(0, 6) == "season"){
-            if(message.substring(7, 11) == "solo"){
-                var gameMode = message.substring(7, 11);
-                var playerName = message.substring(12);
+    } else if(parameters[0] == "season"){
+            if(parameters[1] == "solo"){
+                var gameMode = parameters[1];
+                var playerName = parameters[2];
                 seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, gameMode);
 
-            } else if(message.substring(7,10) == "duo"){
-                var gameMode = message.substring(7, 10);
-                var playerName = message.substring(11);
+            } else if(parameters[1] == "duo"){
+                var gameMode = parameters[1];
+                var playerName = parameters[2];
                 seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, gameMode);
 
-            } else if(message.substring(7, 12) == "squad"){
-                var gameMode = message.substring(7, 12);
-                var playerName = message.substring(13);
+            } else if(parameters[1] == "squad"){
+                var gameMode = parameters[1];
+                var playerName = parameters[2];
                 seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, gameMode);
-
         }
-    } else if (message.substring(0, 4) == "drop"){
-        var mapName = message.substring(5);
+    } else if (parameters[0] == "drop"){
+        var mapName = parameters[1];
 
         dropZone.dropZone(bot, channelID, mapName);
 
-    } else if(message.substring(0, 7) == "captain"){
+    } else if(parameters[0] == "captain"){
 
         chooseCaptain.chooseCaptain(bot, channelID, userID);
 
-    } else if (message.substring(0, 12) == "redvine help"){
+    } else if (parameters[0] == "help"){
 
         help.help(bot, channelID);
 
-    } else if(message.substring(0, 10) == "thanks bot") {
-        bot.sendMessage({
-            to: channelID,
-            message: `My pleasure`,
-        });
     }
 });
 
