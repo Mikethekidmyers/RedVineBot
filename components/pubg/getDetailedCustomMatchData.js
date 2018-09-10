@@ -1,7 +1,7 @@
+const emojiPicker = require('../general/getEmoji.js');
 const gameModeSwitch = require('./gameMode.js');
-const emojiPicker = require('./getEmoji.js');
 
-function getDetailedMatchData(bot, axios, APIkey, latestMatchID, playerName, channelID){
+function getDetailedCustomMatchData(bot, axios, APIkey, latestMatchID, playerName, channelID){
     axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/matches/${latestMatchID}`, {
         timeout: 3000,
         headers: {
@@ -27,26 +27,7 @@ function getDetailedMatchData(bot, axios, APIkey, latestMatchID, playerName, cha
         var descriptionEmoji = "";
         var matchData = res.data.data.attributes;
         var gameMode = res.data.data.attributes.gameMode;
-
-        var playerIdArray = [];
-        var rosterIdArray = [];
-        var rosterDataArray = [];
-
-        res.data.included.forEach(function(data){
-            if(data.type == "participant" || data.type == "roster"){
-                if(data.type == "participant"){
-                    playerIdArray.push(data.id);
-                }
-                if(data.type == "roster"){
-                    rosterIdArray.push(data.relationships.participants.data[0].id);
-                }
-
-            }
-        });
-
-        res.data.data.relationships.rosters.data.forEach(function(rosterData){
-            rosterDataArray.push(rosterData.id);
-        });
+        var isCustomMatch = res.data.data.attributes.isCustomMatch;
 
         res.data.included.forEach(function(player){
             if(player.type == 'participant'){
@@ -96,11 +77,12 @@ function getDetailedMatchData(bot, axios, APIkey, latestMatchID, playerName, cha
 
     gameMode = gameModeSwitch.translateGameMode(gameVar);
 
+    if(isCustomMatch){
         bot.sendMessage({
         to: channelID,
         embed: {
             title: `Detailed stats for the previous game of ${playerName}.`,
-            description: `Performance rating: ${descriptionEmoji}`,
+            description: `${playerName}s performance rating: ${descriptionEmoji}`,
             fields:[
                 {
                     name: "Placement:",
@@ -153,15 +135,20 @@ function getDetailedMatchData(bot, axios, APIkey, latestMatchID, playerName, cha
             },
           }
       });
+  } else {
+    bot.sendMessage({
+    to: channelID,
+    message: 'Sorry, looks like your last game was not a custom game.',
+    });
+  }
 })
 .catch(error =>{
-    console.log('9', error);
+    console.log('11', error);
     bot.sendMessage({
         to: channelID,
         message: 'Oops, looks like something went wrong, please try again',
     });
 })
-
 }
 
-module.exports.getDetailedMatchData = getDetailedMatchData;
+module.exports.getDetailedCustomMatchData = getDetailedCustomMatchData;

@@ -1,5 +1,5 @@
 const getDetailedCustomMatchData = require('./getDetailedCustomMatchData.js');
-const getLastCustomMatch = require('./getLastCustomMatch.js');
+const getLastCustomMatch = require('./subcomponents/getLastCustomMatch.js');
 
 function lastCustom(bot, axios, APIkey, channelID, playerName, returnID){
     axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/players?filter[playerNames]=${playerName}`, {

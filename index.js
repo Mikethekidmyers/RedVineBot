@@ -18,21 +18,21 @@
 
 const Discord = require('discord.io');
 const axios = require('axios');
-const greetUser = require('./components/greetUser.js');
-const emojiPicker = require('./components/getEmoji.js');
-const presence = require('./components/botPresence.js');
-const gameModeSwitch = require('./components/gameMode.js');
-const dropZone = require('./components/dropZone.js');
-const chooseCaptain = require('./components/chooseCaptain.js');
-const gulag = require('./components/banishPlayer.js');
 const help = require('./core/help.js');
-const getSeasons = require('./components/getSeasons.js');
-const seasonStats = require('./components/seasonStats.js');
-const lastMatch = require('./components/lastMatch.js');
-const getMatchData = require('./components/getMatchData.js');
-const inspectGame = require('./components/inspectGame.js');
-const inspectKD = require('./components/inspectKD.js');
-const lastCustom = require('./components/lastCustom.js');
+const gulag = require('./components/general/banishPlayer.js');
+const greetUser = require('./components/general/greetUser.js');
+const emojiPicker = require('./components/general/getEmoji.js');
+const chooseCaptain = require('./components/general/chooseCaptain.js');
+const presence = require('./components/general/botPresence.js');
+const gameModeSwitch = require('./components/pubg/gameMode.js');
+const dropZone = require('./components/pubg/dropZone.js');
+const getSeasons = require('./components/pubg/getSeasons.js');
+const seasonStats = require('./components/pubg/seasonStats.js');
+const lastMatch = require('./components/pubg/lastMatch.js');
+const getMatchData = require('./components/pubg/getMatchData.js');
+const inspectGame = require('./components/pubg/inspectGame.js');
+const inspectKD = require('./components/pubg/inspectKD.js');
+const lastCustom = require('./components/pubg/lastCustom.js');
 
 const fs = require('fs');
 

@@ -4,7 +4,6 @@ function chooseCaptain(bot, channelID, userID){
     // shortHand for accessing the server info
     var shortHand = bot.servers[bot.channels[channelID].guild_id];
 
-    console.log(shortHand);
     //check if the user is in a voice channel
     if(shortHand.members[userID].voice_channel_id != undefined){
         // finds the voice channel the user who called the command is in

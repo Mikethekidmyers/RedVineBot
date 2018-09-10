@@ -1,4 +1,4 @@
-const getPlayerSeason = require('./getPlayerSeason.js');
+const getPlayerSeason = require('./subcomponents/getPlayerSeason.js');
 
 // get season stats
 
