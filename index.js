@@ -1,47 +1,59 @@
 // https://izy521.github.io/discord.io-docs/Discord.Client.html#editChannelInfo
 //Dev mode
-    // const config = require('./config.js');
-    // const clientId = config.clientId;
-    // const clientSecret = config.clientSecret;
-    // const botUsername = config.botUsername;
-    // const botToken = config.botToken;
-    // const APIkey = config.APIkey;
+    const config = require('./config.js');
+    const clientId = config.clientId;
+    const clientSecret = config.clientSecret;
+    const botUsername = config.botUsername;
+    const botToken = config.botToken;
+    const APIkey = config.APIkey;
 //Dev mode
 
 //Live mode
-    const clientId = process.env.clientId;
-    const clientSecret = process.env.clientSecret;
-    const botUsername = process.env.botUsername;
-    const botToken = process.env.botToken;
-    const APIkey = process.env.APIkey;
+    // const clientId = process.env.clientId;
+    // const clientSecret = process.env.clientSecret;
+    // const botUsername = process.env.botUsername;
+    // const botToken = process.env.botToken;
+    // const APIkey = process.env.APIkey;
 //Live mode
 
 const Discord = require('discord.io');
 const axios = require('axios');
 const greetUser = require('./components/greetUser.js');
-const switchCase = require('./components/getEmoji.js');
+const emojiPicker = require('./components/getEmoji.js');
 const presence = require('./components/botPresence.js');
-const gameCase = require('./components/gameMode.js');
+const gameModeSwitch = require('./components/gameMode.js');
+const dropZone = require('./components/dropZone.js');
+const chooseCaptain = require('./components/chooseCaptain.js');
+const gulag = require('./components/banishPlayer.js');
+const help = require('./core/help.js');
+const getSeasons = require('./components/getSeasons.js');
+const seasonStats = require('./components/seasonStats.js');
+const lastMatch = require('./components/lastMatch.js');
+const getMatchData = require('./components/getMatchData.js');
+const inspectGame = require('./components/inspectGame.js');
+const inspectKD = require('./components/inspectKD.js');
+const lastCustom = require('./components/lastCustom.js');
+
 const fs = require('fs');
 
 let lastSeason = "test";
 
 //https://izy521.gitbooks.io/discord-io/content/Client.html
-const bot = new Discord.Client({
-    token: botToken, // Used for bot login
-    autorun: true, // Connect immediately
-});
 
 let greeting = greetUser.greetUser();
 
 // Events
 //https://izy521.gitbooks.io/discord-io/content/Events/Client.html
+const bot = new Discord.Client({
+    token: botToken, // Used for bot login
+    autorun: true, // Connect immediately
+});
 
 // When the bot starts
 bot.on('ready', function(event) {
     console.log('Logged in as %s - %s\n', bot.username, bot.id);
     initialPresence();
-    getSeasons();
+    getSeasons.getSeasons(axios, APIkey);
 
     bot.sendMessage({
         to: greeting.helloChannel,
@@ -49,38 +61,12 @@ bot.on('ready', function(event) {
     });
 });
 
-function getSeasons(){
-    var self = this;
-
-    axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/seasons`, {
-        timeout: 3000,
-        headers: {
-        'Authorization': APIkey,
-        'Accept' : 'application/vnd.api+json'
-    },
-        responseEncoding: 'json',
-    })
-
-    .then(res => {
-
-        var seasonArray = res.data.data;
-
-        lastSeason = res.data.data[seasonArray.length -1].id;
-
-        console.log(lastSeason);
-    })
-    .catch(error =>{
-        console.log('2', error);
-    })
-}
-
 // dc handler
 
 bot.on('disconnect', (errMsg, code) => {
     if(errMsg) console.log(errMsg, code)
     bot.connect();
 });
-// bot is the discord.Client instance
 
 // message handler
 
@@ -114,107 +100,69 @@ setInterval( function setPresence(){
 // When chat messages are received
 bot.on("message", function (user, userID, channelID, message, rawEvent)
 {
+    var shortHand = bot.servers[bot.channels[channelID].guild_id];
+
     if(userID == '142373989770199040'){
         //if the user is marcus, moves him to the afk channel
-        banishPlayer(userID);
+        gulag.banishPlayer(shortHand, userID);
     } else if (message.substring(0, 4) == "pubg"){
         var playerName = message.substring(5); // store the command for cleaner code/reading
 
-        lastMatch(channelID, playerName);
+        lastMatch.lastMatch(bot, axios, APIkey, channelID, playerName);
     } else if(message.substring(0, 7) == "inspect"){
         var playerName = message.substring(8);
 
-        inspectGame(channelID, playerName);
+        inspectGame.inspectGame(bot, axios, APIkey, channelID, playerName);
     } else if(message.substring(0, 2) == "KD"){
         var playerName = message.substring(3);
 
-        inspectKD(channelID, playerName);
+        inspectKD.inspectKD(bot, axios, APIkey, channelID, playerName);
     } else if(message.substring(0, 6) == "custom"){
         if(message.substring(7, 9) == "id"){
 
             var playerName = message.substring(10);
             var returnID = true;
-            lastCustom(channelID, playerName, returnID);
+
+            lastCustom.lastCustom(bot, axios, APIkey, channelID, playerName, returnID);
 
         } else {
 
             var playerName = message.substring(7);
             var returnID = false;
-            lastCustom(channelID, playerName, returnID);
+
+            lastCustom.lastCustom(bot, axios, APIkey, channelID, playerName, returnID);
 
         }
     } else if(message.substring(0, 6) == "season"){
             if(message.substring(7, 11) == "solo"){
                 var gameMode = message.substring(7, 11);
                 var playerName = message.substring(12);
-                seasonStats(channelID, playerName, gameMode);
+                seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, gameMode);
 
             } else if(message.substring(7,10) == "duo"){
                 var gameMode = message.substring(7, 10);
                 var playerName = message.substring(11);
-                seasonStats(channelID, playerName, gameMode);
+                seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, gameMode);
 
             } else if(message.substring(7, 12) == "squad"){
                 var gameMode = message.substring(7, 12);
                 var playerName = message.substring(13);
-                seasonStats(channelID, playerName, gameMode);
+                seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, gameMode);
 
         }
     } else if (message.substring(0, 4) == "drop"){
         var mapName = message.substring(5);
 
-        dropZone(channelID, mapName);
+        dropZone.dropZone(bot, channelID, mapName);
+
     } else if(message.substring(0, 7) == "captain"){
-        chooseCaptain(channelID, userID);
+
+        chooseCaptain.chooseCaptain(bot, channelID, userID);
+
     } else if (message.substring(0, 12) == "redvine help"){
 
-        bot.sendMessage({
-            to: channelID,
-            embed: {
-                title: `Redvine Bot Commands:` ,
-                description: 'Swap the value of $value with a corresponding name to get the described response.',
-                fields: [
-                    {
-                        name: `pubg $value`,
-                        value: `Write the ingame name of a player to get a small summary of their last game`,
-                        inline: true,
-                    },
-                    {
-                        name: `inspect $value`,
-                        value: `Write the ingame name of a player to get a detailed summary of their last game`,
-                        inline: true,
-                    },
-                    {
-                        name: `drop $value`,
-                        value: `Write a map name to get a random place to drop, if you're playing Miramar you can use additional commands like: north, center, west etc. at the end of the sentence`,
-                        inline: true,
-                    },
-                    {
-                        name: `custom $value`,
-                        value: `Write the name of a player to get a detailed match summary of his or hers last custom game.`,
-                        inline: true,
-                    },
-                    {
-                        name: 'custom id $value',
-                        value: 'Write the name of a player to get the match id for his or hers last custom game.',
-                        inline: true,
-                    },
-                    {
-                        name: 'season $gamemode $value',
-                        value: 'Write the gamemode you want to see, and name of a player to get a detailed view of their season this far. Example: season duo MikeMyers',
-                        inline: true,
-                    },
-                    {
-                        name: 'captain',
-                        value: 'Write captain to choose a random member from the voice channel to be your team captain',
-                        inline: true,
-                    }
-                ],
-                footer: {
-                    text: '',
-                },
-            }
-        });
+        help.help(bot, channelID);
+
     } else if(message.substring(0, 10) == "thanks bot") {
         bot.sendMessage({
             to: channelID,
@@ -222,934 +170,5 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
         });
     }
 });
-
-//banishes the user specified in the blackList variable
-function banishPlayer(userID){
-    bot.moveUserTo({
-        serverID: '316340505061359616',
-        userID: userID,
-        channelID: '316341181183295501',
-    });
-}
-
-//chooses a random captain from the members currently in the voice channel
-
-function chooseCaptain(channelID, userID){
-    // shortHand for accessing the server info
-    var shortHand = bot.servers[bot.channels[channelID].guild_id];
-
-    //check if the user is in a voice channel
-    if(shortHand.members[userID].voice_channel_id != undefined){
-        // finds the voice channel the user who called the command is in
-        var voiceChannelID = shortHand.members[userID].voice_channel_id;
-
-        // finds the members of the voice channel
-        var voiceMembers = shortHand.channels[voiceChannelID].members;
-
-        // finds the name of the voice channel
-        var voiceChannelName = shortHand.channels[voiceChannelID].name;
-
-        let userIdArray = [];
-
-        for(let memberID in shortHand.members){
-            if (bot.users[memberID] != undefined){
-                userIdArray.push(bot.users[memberID].id);
-            }
-        }
-
-        let voiceMembersIdArray = [];
-
-        for(let id in userIdArray){
-            let y = userIdArray[id];
-            let stringID = JSON.stringify(userIdArray[id]);
-
-            if(voiceMembers[y] != undefined){
-                if(userIdArray[id] == voiceMembers[y].user_id){
-                    voiceMembersIdArray.push(voiceMembers[y].user_id);
-                }
-            }
-        }
-
-        let voiceMembersNickArray = [];
-
-        for(let id in voiceMembersIdArray){
-            for(let memberID in shortHand.members){
-                if(bot.users[memberID] != undefined){
-                    if(voiceMembersIdArray[id] == bot.users[memberID].id){
-                        voiceMembersNickArray.push(bot.users[memberID].username);
-                    }
-                }
-            }
-        }
-
-        let randomNumber = Math.floor(Math.random()*voiceMembersNickArray.length);
-
-        bot.sendMessage({
-            to: channelID,
-            message: `The captain for this game is ${voiceMembersNickArray[randomNumber]}`,
-            tts: true,
-        });
-    } else {
-        bot.sendMessage({
-            to: channelID,
-            message: `Looks like you're not in a voice channel, join one and try again!`,
-        });
-    }
-};
-
-function dropZone(channelID, mapName){
-    var phraseArray = ["We're heading to ", "We're going to ", "It's hot drop time in ", "It's been a long time since we were in ", "", "Ready, set, ", "Oh how I've missed you ", "Fuck me I hate landing in ", "Let's drop in "];
-    var landingPhrase = phraseArray[Math.floor(Math.random() * phraseArray.length)];
-
-    switch(mapName){
-
-        case "miramar":
-        case "Miramar":
-            var miramarArray = ['Alcantara', 'La Cobreria', 'Water Treatment', 'Torre Ahumada', 'Campo Militar', 'Tierra Bronca', 'Cruz Del Valle', 'El Azahar', 'Hacienda del Patron', 'San Martin', 'El Pozo', 'Monte Nuevo', 'Power Grid', 'Graveyard', 'Minas Generales', 'Junkyard', 'Impala', 'La Bendita', 'Pecado', 'Ladrillera', 'Chumacera', 'Los Leones', 'Puerto Paraiso', 'Los Higos', 'Valle del Mar', 'Prison', 'Minas del sur', 'Crater Fields'];
-            var rand = miramarArray[Math.floor(Math.random() * miramarArray.length)];
-        break;
-
-        case "miramar south":
-        case "Miramar south":
-            var miramarSouthArray = ['Prison', 'Minas Del Sur', 'Valle Del Mar', 'Puerto Paraiso', 'Chumacera', 'Los Leones', 'Los Higos'];
-            var rand = miramarSouthArray[Math.floor(Math.random() * miramarSouthArray.length)];
-        break;
-
-        case "miramar north":
-        case "Miramar north":
-            var miramarNorthArray = ['Alcantara', 'La Cobreria', 'Crater Fields', 'Trailer Park', 'Torre Ahumada', 'Water Treatment', 'Cruz Del Valle', 'Tierra Bronca', 'Campo Militar'];
-            var rand = miramarNorthArray[Math.floor(Math.random() * miramarNorthArray.length)];
-        break;
-
-        case "miramar east":
-        case "Miramar east":
-            var miramarEastArray = ['Torre Ahumada', 'Campo Militar', 'Tierra Bronca', 'Cruz Del Valle', 'El Azahar', 'Junkyard', 'Minar Generales', 'Impala', 'La Bendita', 'Puerto Paraiso', 'Los Leones', 'Islands east of Impala'];
-            var rand = miramarEastArray[Math.floor(Math.random() * miramarEastArray.length)];
-        break;
-
-        case "miramar west":
-        case "Miramar west":
-            var miramarWestArray = ['Prison', 'Minas Del Sur', 'Valle Del Mar', 'Los Higos', 'Chumacera', 'Ladrillera', 'Monte Nuevo', 'El Pozo', 'Trailer Park', 'Alcantara', 'La Cobreria', 'Crater Fields'];
-            var rand = miramarWestArray[Math.floor(Math.random() * miramarWestArray.length)];
-        break;
-
-        case "miramar center":
-        case "Miramar center":
-            var miramarCenterArray = ['La Cobreria', 'Water Treatment', 'San Martin', 'Hacienda Del Patron', 'Cruz Del Valle', 'Power Grid', 'Graveyard', 'Pecado', 'La Bendita', 'Chumacera', 'Los Leones', 'Los Higos'];
-            var rand = miramarCenterArray[Math.floor(Math.random() * miramarCenterArray.length)];
-        break;
-
-        case "erangel":
-        case "Erangel":
-            var erangelArray = ['Zharki', 'Shooting Range', 'Severny', 'Stalber', 'Yasnaya Polyana', 'Kameshki', 'Mansion', 'Lipovka', 'Prison', 'Shelter', 'School', 'Mylta Power', 'Rozhok', 'Ruins', 'Mylta', 'Farm', 'Novorepnoye', 'Military Factory', 'Military Police station', 'Military Barracks', 'Military Radio Station', 'Ferry Pier', 'Primorsk', 'Quarry', 'Gatka', 'North Georgopol', 'South Georgopol', 'Pochinki', 'Water Town'];
-            var rand = erangelArray[Math.floor(Math.random() * erangelArray.length)];
-        break;
-
-        case "sanhok":
-        case "Sanhok":
-            var sanhokArray = ['Camp Alpha', 'Ha Tinh', 'Tat Mok', 'Khao', 'Mongnai', 'Paradise Resort', 'Camp Bravo', 'Ruins', 'Bootcamp', 'Lakawi', 'Kampong', 'Quarry', 'Camp Charlie', 'Ban Tai', 'Docks', 'Sahmee', 'Na Kham', 'Tambang', 'Pai Nan', 'Bhan'];
-            var rand = sanhokArray[Math.floor(Math.random() * sanhokArray.length)];
-        break;
-
-        default:
-        bot.sendMessage({
-            to: channelID,
-            message: `Looks like we got a typo in here somewhere, type "redvine help" in the chat if you need any help `,
-        })
-        break;
-    }
-    if(rand){
-        bot.sendMessage({
-            to: channelID,
-            message: `${landingPhrase}${rand}`,
-            tts: true,
-        });
-    }
-}
-
-// get season stats
-function seasonStats(channelID, playerName, gameMode){
-
-    axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/players?filter[playerNames]=${playerName}`, {
-        timeout: 3000,
-        headers: {
-        'Authorization': APIkey,
-        'Accept' : 'application/vnd.api+json'
-    },
-        responseEncoding: 'json',
-    })
-
-    .then(res => {
-
-    const accountID = res.data.data[0].id;
-
-    getPlayerSeason(channelID, playerName, accountID, gameMode);
-
-    })
-    .catch(error =>{
-        console.log('1', error);
-    })
-}
-
-function getPlayerSeason(channelID, playerName, accountID, gameMode){
-
-    axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/players/${accountID}/seasons/${lastSeason}`, {
-        timeout: 3000,
-        headers: {
-        'Authorization': APIkey,
-        'Accept' : 'application/vnd.api+json'
-    },
-        responseEncoding: 'json',
-    })
-
-    .then(res => {
-        switch(gameMode){
-        case "solo":
-        var season = res.data.data.attributes.gameModeStats['solo-fpp']
-        break;
-
-        case "duo":
-        var season = res.data.data.attributes.gameModeStats['duo-fpp']
-        break;
-
-        case "squad":
-        var season = res.data.data.attributes.gameModeStats['squad-fpp']
-        break;
-
-        default:
-        var season = res.data.data.attributes.gameModeStats['squad-fpp']
-        break;
-        }
-
-        var kills = season.kills;
-        var assists = season.assists;
-        var daysPlayed = season.days;
-        var headShots = season.headshotKills;
-        var longestKill = Math.round(season.longestKill * 100) / 100;
-        var timeSurvived = season.timeSurvived;
-        var wins = season.wins;
-        var rounds = season.roundsPlayed;
-        var deaths = season.losses;
-        var kdRatio = Math.round(kills / deaths * 100) / 100;
-        var avgSeconds = Math.round(timeSurvived / rounds * 100) / 100;
-        var avgMinutes = Math.round(avgSeconds / 60 * 100) / 100;
-        var hoursPlayed = Math.round(timeSurvived / 60 / 60 * 10)/10;
-        var damageDealt = season.damageDealt;
-        var avgDamage = Math.round(damageDealt / rounds);
-        var suicides = season.suicides;
-        var teamKills = season.teamKills;
-        var topTen = season.top10s;
-
-        // rating calc
-        var winRating = season.winPoints;
-        var killRating = season.killPoints;
-
-        var overAllRating = Math.round(winRating + (killRating * 0.2));
-
-        // avg distance
-        var distanceTraveled = season.rideDistance + season.walkDistance;
-
-        var avgDistance = Math.round(distanceTraveled / rounds)/1000;
-
-        // time survived
-        var avgTimeSurvived = timeSurvived / rounds;
-        var minutes = Math.floor(avgTimeSurvived / 60);
-        var seconds = Math.round(avgTimeSurvived - minutes * 60);
-
-        //winrate calc
-        var winRate = wins / rounds * 100;
-        var winPercent = Math.round(winRate);
-
-        //one kill per... calculation
-        var avgTimePerKill = timeSurvived / kills;
-        var killMinutes = Math.floor(avgTimePerKill / 60);
-        var killSeconds = Math.round(avgTimePerKill - killMinutes * 60);
-
-        if(rounds > 0){
-        bot.sendMessage({
-        to: channelID,
-        embed: {
-            title: `Detailed season stats for ${playerName}.`,
-            description: `${playerName} has played at least one ${gameMode} game ${daysPlayed} days this season, and has an impressive ${hoursPlayed} hours spread across those days.`,
-            fields:[
-                // In case the API gets support for #rank directly from the API
-                // {
-                //     name: "Player Rating:",
-                //     value: `${overAllRating}`,
-                // },
-                {
-                    name: "Kills:",
-                    value: `${kills}`,
-                    inline: true,
-                },
-                {
-                    name: "Assists: ",
-                    value: `${assists}`,
-                    inline: true,
-                },
-                {
-                    name: "Headshots: ",
-                    value: `${headShots}`,
-                    inline: true,
-                },
-                {
-                    name: "Longest Kill: ",
-                    value: `${longestKill}m`,
-                    inline: true,
-                },
-                {
-                    name: "Season K/D Ratio: ",
-                    value: `${kdRatio}`,
-                    inline: true,
-                },
-                {
-                    name: "Win Rate: ",
-                    value: `${winPercent}%`,
-                    inline: true,
-                },
-                {
-                    name: "Games Played: ",
-                    value: `${rounds}`,
-                    inline: true,
-                },
-                {
-                    name: "Wins: ",
-                    value: `${wins}`,
-                    inline: true,
-                },
-                {
-                    name: "Top 10: ",
-                    value: `${topTen}`,
-                    inline: true,
-                },
-                {
-                    name: "Average Time Survived:",
-                    value: `${minutes}m ${seconds}s`,
-                    inline: true,
-                },
-                {
-                    name: "Average Damage Dealt: ",
-                    value: `${avgDamage}`,
-                    inline: true,
-                },
-                {
-                    name: "Average Distance Traveled",
-                    value: `${avgDistance} km`,
-                    inline: true,
-                },
-            ],
-            footer: {
-                text: `With ${kills} kills across ${rounds} games in ${hoursPlayed} hours, ${playerName} can be expected to kill a player once every ${killMinutes} m ${killSeconds} s.`,
-            },
-          }
-      });
-  } else {
-      bot.sendMessage({
-          to: channelID,
-          message: `Looks like ${playerName} hasn't played any ${gameMode} games this season.`
-      });
-  }
-
-    })
-    .catch(error =>{
-        console.log('3', error);
-        bot.sendMessage({
-            to: channelID,
-            message: 'Oops, looks like something went wrong, please try again',
-        });
-    })
-}
-// get last 20 games KD
-
-function inspectKD(channelID, playerName){
-    axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/players?filter[playerNames]=${playerName}`, {
-        timeout: 3000,
-        headers: {
-        'Authorization': APIkey,
-        'Accept' : 'application/vnd.api+json'
-    },
-        responseEncoding: 'json',
-    })
-
-    .then(res => {
-
-        // Find match ID
-        const attributes = res.data.data[0].relationships.matches.data;
-
-        // const latestMatchID = res.data.data[0].relationships.matches.data[0].id;
-
-
-        // Limit Match ID array to return 20
-        if(attributes.length >= 20){
-            var twentyAttr = attributes.slice(0, 20);
-        } else if (attributes.length <= 20){
-            var twentyAttr = attributes;
-        };
-
-        var idArray = [];
-
-        var j = 0;
-
-        for(var i = 0; i < twentyAttr.length; i++){
-            idArray.push(twentyAttr[j].id);
-            var latestMatchID = twentyAttr[j].id;
-            getKD(latestMatchID, playerName);
-            j += 1;
-        };
-    })
-    .catch(error =>{
-        console.log('4', error);
-        bot.sendMessage({
-            to: channelID,
-            message: 'Oops, looks like something went wrong, please try again',
-        });
-    })
-}
-
-// get KD
-
-function getKD(latestMatchID, playerName, channelID){
-    axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/matches/${latestMatchID}`, {
-        timeout: 3000,
-        headers: {
-        'Authorization': APIkey,
-        'Accept' : 'application/vnd.api+json'
-    },
-        responseEncoding: 'json',
-    })
-
-    .then(res => {
-
-        var self = this;
-        var placement = "";
-        var damageDealt = "";
-        var kills = "";
-
-        res.data.included.forEach(function(player){
-            if(player.type == 'participant'){
-                var name = player.attributes.stats.name;
-                var playerId = player.id;
-
-                if(name == playerName){
-                    var placement = player.attributes.stats.winPlace;
-                    var damageDealt = player.attributes.stats.damageDealt;
-                    var kills = player.attributes.stats.kills;
-                    self.damageDealt = Math.floor(damageDealt);
-                    self.kills = kills;
-                }
-            }
-        });
-    })
-    .catch(error =>{
-        console.log('5', error);
-        bot.sendMessage({
-            to: channelID,
-            message: 'Oops, looks like something went wrong, please try again',
-        });
-    })
-}
-
-// get last match stats
-
-function lastMatch(channelID, playerName){
-    axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/players?filter[playerNames]=${playerName}`, {
-        timeout: 3000,
-        headers: {
-        'Authorization': APIkey,
-        'Accept' : 'application/vnd.api+json'
-    },
-        responseEncoding: 'json',
-    })
-
-    .then(res => {
-
-        const latestMatchID = res.data.data[0].relationships.matches.data[0].id;
-
-        getMatchData(latestMatchID, playerName, channelID);
-
-    })
-    .catch(error =>{
-        console.log('6', error);
-        bot.sendMessage({
-            to: channelID,
-            message: 'Oops, looks like something went wrong, please try again',
-        });
-    })
-}
-
-function getMatchData(latestMatchID, playerName, channelID){
-    axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/matches/${latestMatchID}`, {
-        timeout: 3000,
-        headers: {
-        'Authorization': APIkey,
-        'Accept' : 'application/vnd.api+json'
-    },
-        responseEncoding: 'json',
-    })
-
-    .then(res => {
-
-        var statMessage = "";
-        var self = this;
-
-        res.data.included.forEach(function(player){
-            if(player.type == 'participant'){
-                var placement = player.attributes.stats.winPlace;
-                var name = player.attributes.stats.name;
-                var playerId = player.id;
-                var knocks = player.attributes.stats.DBNOs;
-                var assists = player.attributes.stats.assists;
-                var boosts = player.attributes.stats.boosts;
-                var damageDealt = player.attributes.stats.damageDealt;
-                var kills = player.attributes.stats.kills;
-                var longestKill = player.attributes.stats.longestKill;
-                var headShots = player.attributes.stats.headshotKills;
-
-                //time calc
-
-                var timeSurvived = player.attributes.stats.timeSurvived;
-                var minutes = Math.floor(timeSurvived / 60);
-                var seconds = Math.round(timeSurvived - minutes * 60);
-
-                if(name == playerName){
-                    if(headShots == 0){
-                        self.statMessage = playerName + " placed as #" + placement + " last game. He survived for " + minutes + "m" + seconds + "s and killed " + kills + " players.";
-                    } else {
-                        self.statMessage = playerName + " placed as #" + placement + " last game. He survived for " + minutes + "m" + seconds + "s and killed " + kills + " players, " + headShots + " of which were headshots.";
-                    }
-                }
-            }
-        });
-
-        bot.sendMessage({
-        to: channelID,
-        message: `${self.statMessage}`,
-        });
-
-    })
-    .catch(error =>{
-        console.log('7', error);
-        bot.sendMessage({
-            to: channelID,
-            message: 'Oops, looks like something went wrong, please try again',
-        });
-    })
-
-}
-
-function inspectGame(channelID, playerName){
-    axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/players?filter[playerNames]=${playerName}`, {
-        timeout: 3000,
-        headers: {
-        'Authorization': APIkey,
-        'Accept' : 'application/vnd.api+json'
-    },
-        responseEncoding: 'json',
-    })
-
-    .then(res => {
-
-        const latestMatchID = res.data.data[0].relationships.matches.data[0].id;
-
-        getDetailedMatchData(latestMatchID, playerName, channelID);
-
-    })
-    .catch(error =>{
-        console.log('8', error);
-        bot.sendMessage({
-            to: channelID,
-            message: 'Oops, looks like something went wrong, please try again',
-        });
-    })
-}
-
-function getDetailedMatchData(latestMatchID, playerName, channelID){
-    axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/matches/${latestMatchID}`, {
-        timeout: 3000,
-        headers: {
-        'Authorization': APIkey,
-        'Accept' : 'application/vnd.api+json'
-    },
-        responseEncoding: 'json',
-    })
-
-    .then(res => {
-
-        var self = this;
-        var placement = "";
-        var knocks = "";
-        var assists = "";
-        var damageDealt = "";
-        var kills = "";
-        var longestKill = "";
-        var headShots = "";
-        var minutes = "";
-        var seconds = "";
-        var travelDistance = "";
-        var descriptionEmoji = "";
-        var matchData = res.data.data.attributes;
-        var gameMode = res.data.data.attributes.gameMode;
-
-        var playerIdArray = [];
-        var rosterIdArray = [];
-        var rosterDataArray = [];
-
-        res.data.included.forEach(function(data){
-            if(data.type == "participant" || data.type == "roster"){
-                if(data.type == "participant"){
-                    playerIdArray.push(data.id);
-                }
-                if(data.type == "roster"){
-                    rosterIdArray.push(data.relationships.participants.data[0].id);
-                }
-
-            }
-        });
-
-        res.data.data.relationships.rosters.data.forEach(function(rosterData){
-            rosterDataArray.push(rosterData.id);
-        });
-
-        res.data.included.forEach(function(player){
-            if(player.type == 'participant'){
-                var name = player.attributes.stats.name;
-                var playerId = player.id;
-
-                //time calc
-
-                var timeSurvived = player.attributes.stats.timeSurvived;
-                var minutes = Math.floor(timeSurvived / 60);
-                var seconds = Math.round(timeSurvived - minutes * 60);
-
-                if(name == playerName){
-                    var placement = player.attributes.stats.winPlace;
-                    var knocks = player.attributes.stats.DBNOs;
-                    var assists = player.attributes.stats.assists;
-                    var damageDealt = player.attributes.stats.damageDealt;
-                    var kills = player.attributes.stats.kills;
-                    var longestKill = player.attributes.stats.longestKill;
-                    var headShots = player.attributes.stats.headshotKills;
-                    var walkDistance = player.attributes.stats.walkDistance;
-                    var rideDistance = player.attributes.stats.rideDistance;
-                    var swimDistance = player.attributes.stats.swimDistance;
-                    var travelDistance = swimDistance + rideDistance + walkDistance;
-
-                    self.travelDistance = Math.round((travelDistance*100)/1000) /100;
-                    self.placement = "#" + placement;
-                        if(placement == 1){ self.placement = ':trophy:';}
-                        else if(placement >= 25){ self.placement = "#" + placement + ":shit:";}
-                    self.knocks = knocks;
-                    self.assists = assists;
-                    self.damageDealt = Math.floor(damageDealt);
-                    self.kills = kills;
-                    self.longestKill = Math.floor(longestKill);
-                    self.headShots = headShots;
-                    self.minutes = minutes;
-                    self.seconds = seconds;
-                }
-            }
-        });
-
-    var caseVar = self.kills
-
-    var descriptionEmoji = switchCase.getEmoji(caseVar);
-
-    var gameVar = gameMode;
-
-    gameMode = gameCase.translateGameMode(gameVar);
-
-        bot.sendMessage({
-        to: channelID,
-        embed: {
-            title: `Detailed stats for the previous game of ${playerName}.`,
-            description: `Performance rating: ${descriptionEmoji}`,
-            fields:[
-                {
-                    name: "Placement:",
-                    value: `${self.placement}`,
-                    inline: true,
-                },
-                {
-                    name: "Time Survived:",
-                    value: `${self.minutes}m ${self.seconds}s`,
-                    inline: true,
-                },
-                {
-                    name: "Distance Traveled: ",
-                    value: `${self.travelDistance}km`,
-                    inline: true,
-                },
-                {
-                    name: "Kills: ",
-                    value: `${self.kills}`,
-                    inline: true,
-                },
-                {
-                    name: "DBNOs: ",
-                    value: `${self.knocks}`,
-                    inline: true,
-                },
-                {
-                    name: "Assists: ",
-                    value: `${self.assists}`,
-                    inline: true,
-                },
-                {
-                    name: "Damage dealt: ",
-                    value: `${self.damageDealt}`,
-                    inline: true,
-                },
-                {
-                    name: "Headshots: ",
-                    value: `${self.headShots}`,
-                    inline: true,
-                },
-                {
-                    name: "Longest Kill: ",
-                    value: `${self.longestKill}m`,
-                    inline: true,
-                },
-            ],
-            footer: {
-                text: `Gamemode: ${gameMode} `,
-            },
-          }
-      });
-})
-.catch(error =>{
-    console.log('9', error);
-    bot.sendMessage({
-        to: channelID,
-        message: 'Oops, looks like something went wrong, please try again',
-    });
-})
-
-}
-
-
-function lastCustom(channelID, playerName, returnID){
-    axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/players?filter[playerNames]=${playerName}`, {
-        timeout: 3000,
-        headers: {
-        'Authorization': APIkey,
-        'Accept' : 'application/vnd.api+json'
-    },
-        responseEncoding: 'json',
-    })
-
-    .then(res => {
-
-        const latestMatchID = res.data.data[0].relationships.matches.data[0].id;
-
-        if(!returnID){
-            getDetailedCustomMatchData(latestMatchID, playerName, channelID);
-        } else if(returnID){
-            getLastCustomMatch(latestMatchID, playerName, channelID);
-        }
-
-    })
-    .catch(error =>{
-        console.log('10', error);
-        bot.sendMessage({
-            to: channelID,
-            message: 'Oops, looks like something went wrong, please try again',
-        });
-    })
-}
-
-function getDetailedCustomMatchData(latestMatchID, playerName, channelID){
-    axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/matches/${latestMatchID}`, {
-        timeout: 3000,
-        headers: {
-        'Authorization': APIkey,
-        'Accept' : 'application/vnd.api+json'
-    },
-        responseEncoding: 'json',
-    })
-
-    .then(res => {
-
-        var self = this;
-        var placement = "";
-        var knocks = "";
-        var assists = "";
-        var damageDealt = "";
-        var kills = "";
-        var longestKill = "";
-        var headShots = "";
-        var minutes = "";
-        var seconds = "";
-        var travelDistance = "";
-        var descriptionEmoji = "";
-        var matchData = res.data.data.attributes;
-        var gameMode = res.data.data.attributes.gameMode;
-        var isCustomMatch = res.data.data.attributes.isCustomMatch;
-
-        res.data.included.forEach(function(player){
-            if(player.type == 'participant'){
-                var name = player.attributes.stats.name;
-                var playerId = player.id;
-
-                //time calc
-
-                var timeSurvived = player.attributes.stats.timeSurvived;
-                var minutes = Math.floor(timeSurvived / 60);
-                var seconds = Math.round(timeSurvived - minutes * 60);
-
-                if(name == playerName){
-                    var placement = player.attributes.stats.winPlace;
-                    var knocks = player.attributes.stats.DBNOs;
-                    var assists = player.attributes.stats.assists;
-                    var damageDealt = player.attributes.stats.damageDealt;
-                    var kills = player.attributes.stats.kills;
-                    var longestKill = player.attributes.stats.longestKill;
-                    var headShots = player.attributes.stats.headshotKills;
-                    var walkDistance = player.attributes.stats.walkDistance;
-                    var rideDistance = player.attributes.stats.rideDistance;
-                    var swimDistance = player.attributes.stats.swimDistance;
-                    var travelDistance = swimDistance + rideDistance + walkDistance;
-
-                    self.travelDistance = Math.round((travelDistance*100)/1000) /100;
-                    self.placement = "#" + placement;
-                        if(placement == 1){ self.placement = ':trophy:';}
-                        else if(placement >= 25){ self.placement = "#" + placement + ":shit:";}
-                    self.knocks = knocks;
-                    self.assists = assists;
-                    self.damageDealt = Math.floor(damageDealt);
-                    self.kills = kills;
-                    self.longestKill = Math.floor(longestKill);
-                    self.headShots = headShots;
-                    self.minutes = minutes;
-                    self.seconds = seconds;
-                }
-            }
-        });
-
-    var caseVar = self.kills
-
-    var descriptionEmoji = switchCase.getEmoji(caseVar);
-
-    var gameVar = gameMode;
-
-    gameMode = gameCase.translateGameMode(gameVar);
-
-    if(isCustomMatch){
-        bot.sendMessage({
-        to: channelID,
-        embed: {
-            title: `Detailed stats for the previous game of ${playerName}.`,
-            description: `${playerName}s performance rating: ${descriptionEmoji}`,
-            fields:[
-                {
-                    name: "Placement:",
-                    value: `${self.placement}`,
-                    inline: true,
-                },
-                {
-                    name: "Time Survived:",
-                    value: `${self.minutes}m ${self.seconds}s`,
-                    inline: true,
-                },
-                {
-                    name: "Distance Traveled: ",
-                    value: `${self.travelDistance}km`,
-                    inline: true,
-                },
-                {
-                    name: "Kills: ",
-                    value: `${self.kills}`,
-                    inline: true,
-                },
-                {
-                    name: "DBNOs: ",
-                    value: `${self.knocks}`,
-                    inline: true,
-                },
-                {
-                    name: "Assists: ",
-                    value: `${self.assists}`,
-                    inline: true,
-                },
-                {
-                    name: "Damage dealt: ",
-                    value: `${self.damageDealt}`,
-                    inline: true,
-                },
-                {
-                    name: "Headshots: ",
-                    value: `${self.headShots}`,
-                    inline: true,
-                },
-                {
-                    name: "Longest Kill: ",
-                    value: `${self.longestKill}m`,
-                    inline: true,
-                },
-            ],
-            footer: {
-                text: `Gamemode: ${gameMode} `,
-            },
-          }
-      });
-  } else {
-    bot.sendMessage({
-    to: channelID,
-    message: 'Sorry, looks like your last game was not a custom game.',
-    });
-  }
-})
-.catch(error =>{
-    console.log('11', error);
-    bot.sendMessage({
-        to: channelID,
-        message: 'Oops, looks like something went wrong, please try again',
-    });
-})
-}
-
-
-
-function getLastCustomMatch(latestMatchID, playerName, channelID){
-        axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/matches/${latestMatchID}`, {
-            timeout: 3000,
-            headers: {
-            'Authorization': APIkey,
-            'Accept' : 'application/vnd.api+json'
-        },
-            responseEncoding: 'json',
-        })
-
-        .then(res => {
-            var matchData = res.data.data.attributes;
-            var gameMode = res.data.data.attributes.gameMode;
-            var isCustomMatch = res.data.data.attributes.isCustomMatch;
-
-        if(isCustomMatch){
-            bot.sendMessage({
-                to: channelID,
-                message: `${playerName} just played a custom match with the ID of: ${latestMatchID} .`,
-            });
-        } else {
-            bot.sendMessage({
-                to: channelID,
-                message: `Looks like ${playerName} has not played a custom match recently. :cold_sweat:`,
-            });
-        }
-    })
-    .catch(error =>{
-        console.log(error);
-    })
-}
-
-function teamRoster(channelID, playerName){
-    //work in progress
-}
-
-// Get all users
-
-function getAllUsers(serverID){
-    console.log(bot.servers[serverID]);
-}
-
 
 // end of file
