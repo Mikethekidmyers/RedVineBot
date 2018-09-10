@@ -166,7 +166,7 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
         dropZone(channelID, mapName);
     } else if(message.substring(0, 7) == "captain"){
         chooseCaptain(channelID, userID);
-    } else if (message.substring(0, 4) == "help"){
+    } else if (message.substring(0, 12) == "redvine help"){
 
         bot.sendMessage({
             to: channelID,
@@ -186,7 +186,7 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
                     },
                     {
                         name: `drop $value`,
-                        value: `Write a map name to get a random place to drop`,
+                        value: `Write a map name to get a random place to drop, if you're playing Miramar you can use additional commands like: north, center, west etc. at the end of the sentence`,
                         inline: true,
                     },
                     {
@@ -354,15 +354,17 @@ function dropZone(channelID, mapName){
         default:
         bot.sendMessage({
             to: channelID,
-            message: `Looks like we got a typo in here somewhere`,
+            message: `Looks like we got a typo in here somewhere, type "redvine help" in the chat if you need any help `,
         })
         break;
     }
-    bot.sendMessage({
-        to: channelID,
-        message: `${landingPhrase}${rand}`,
-        tts: true,
-    });
+    if(rand){
+        bot.sendMessage({
+            to: channelID,
+            message: `${landingPhrase}${rand}`,
+            tts: true,
+        });
+    }
 }
 
 // get season stats
