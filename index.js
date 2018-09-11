@@ -16,14 +16,20 @@
     // const APIkey = process.env.APIkey;
 //Live mode
 
+// require the different components into the index file
 const Discord = require('discord.io');
 const axios = require('axios');
+const fs = require('fs');
+
+// these are the discord specific components
 const help = require('./core/help.js');
 const gulag = require('./components/general/banishPlayer.js');
 const greetUser = require('./components/general/greetUser.js');
 const emojiPicker = require('./components/general/getEmoji.js');
 const chooseCaptain = require('./components/general/chooseCaptain.js');
 const presence = require('./components/general/botPresence.js');
+
+// these are pubg specific components
 const gameModeSwitch = require('./components/pubg/gameMode.js');
 const dropZone = require('./components/pubg/dropZone.js');
 const getSeasons = require('./components/pubg/getSeasons.js');
@@ -34,16 +40,11 @@ const inspectGame = require('./components/pubg/inspectGame.js');
 const inspectKD = require('./components/pubg/inspectKD.js');
 const lastCustom = require('./components/pubg/lastCustom.js');
 
-const fs = require('fs');
-
+// Global variables
 let lastSeason = "test";
-
-//https://izy521.gitbooks.io/discord-io/content/Client.html
-
 let greeting = greetUser.greetUser();
 
 // Events
-//https://izy521.gitbooks.io/discord-io/content/Events/Client.html
 const bot = new Discord.Client({
     token: botToken, // Used for bot login
     autorun: true, // Connect immediately
@@ -62,14 +63,12 @@ bot.on('ready', function(event) {
 });
 
 // dc handler
-
 bot.on('disconnect', (errMsg, code) => {
     if(errMsg) console.log(errMsg, code)
     bot.connect();
 });
 
 // message handler
-
 bot.on('message', (data) => {
     if(data.type !== 'message'){
         return;
@@ -77,6 +76,7 @@ bot.on('message', (data) => {
     handleMessage(data.text);
 });
 
+// sets the bots inital presence
 function initialPresence(){
     bot.setPresence({
         game: {
@@ -86,6 +86,7 @@ function initialPresence(){
     });
 }
 
+// rotates the bots presence every 3 minutes
 setInterval( function setPresence(){
     var presenceVar = presence.presenceRotator();
     bot.setPresence({
@@ -94,77 +95,72 @@ setInterval( function setPresence(){
             name: presenceVar,
         }
     });
-}, 120000);
-
+}, 180000);
 
 // When chat messages are received
 bot.on("message", function (user, userID, channelID, message, rawEvent)
 {
+    //split the command on each space and put it into an array
     let parameters = message.split(" ");
 
+    //puts all the info about the server the bot is in into a variable
     var shortHand = bot.servers[bot.channels[channelID].guild_id];
 
     if(userID == '142373989770199040'){
         //if the user is marcus, moves him to the afk channel
         gulag.banishPlayer(shortHand, userID);
-    } else if (parameters[0] == "pubg"){
+    }
+    else if (parameters[0] == "pubg"){
         var playerName = parameters[1]; // store the command for cleaner code/reading
-
         lastMatch.lastMatch(bot, axios, APIkey, channelID, playerName);
-    } else if(parameters[0] == "inspect"){
+    }
+    else if(parameters[0] == "inspect"){
         var playerName = parameters[1];
-
         inspectGame.inspectGame(bot, axios, APIkey, channelID, playerName);
-    } else if(parameters[0] == "KD"){
+    }
+    else if(parameters[0] == "KD"){
         var playerName = parameters[1];
-
         inspectKD.inspectKD(bot, axios, APIkey, channelID, playerName);
-    } else if(parameters[0] == "custom"){
+    }
+    else if(parameters[0] == "custom"){
         //checks if the player played a custom match as his last match
         if(parameters[1] == "id"){
-
             var playerName = parameters[2];
             var returnID = true;
-
             lastCustom.lastCustom(bot, axios, APIkey, channelID, playerName, returnID);
-
         } else {
-
             var playerName = parameters[2];
             var returnID = false;
-
             lastCustom.lastCustom(bot, axios, APIkey, channelID, playerName, returnID);
 
         }
-    } else if(parameters[0] == "season"){
+    }
+    else if(parameters[0] == "season"){
             if(parameters[1] == "solo"){
                 var gameMode = parameters[1];
                 var playerName = parameters[2];
                 seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, gameMode);
-
-            } else if(parameters[1] == "duo"){
+            }
+            else if(parameters[1] == "duo"){
                 var gameMode = parameters[1];
                 var playerName = parameters[2];
                 seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, gameMode);
-
-            } else if(parameters[1] == "squad"){
+            }
+            else if(parameters[1] == "squad"){
                 var gameMode = parameters[1];
                 var playerName = parameters[2];
                 seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, gameMode);
         }
-    } else if (parameters[0] == "drop"){
+    }
+    else if (parameters[0] == "drop"){
         var mapName = parameters[1];
-
         dropZone.dropZone(bot, channelID, mapName);
-
-    } else if(parameters[0] == "captain"){
-
+    }
+    else if(parameters[0] == "captain"){
         chooseCaptain.chooseCaptain(bot, channelID, userID);
-
-    } else if (parameters[0] == "help"){
-
+    }
+    else if (parameters[0] == "help"){
         help.help(bot, channelID);
-
     }
 });
 
