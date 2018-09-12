@@ -159,7 +159,7 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
     else if(parameters[0] == "captain"){
         chooseCaptain.chooseCaptain(bot, channelID, userID);
     }
-    else if (parameters[0] == "help"){
+    else if (parameters[0] == "redvine" && parameters[1] == "help"){
         help.help(bot, channelID);
     }
 });
