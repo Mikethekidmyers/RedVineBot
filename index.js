@@ -97,6 +97,13 @@ setInterval( function setPresence(){
     });
 }, 180000);
 
+setInterval( function setNickName(){
+    bot.editNickname({
+        serverID: '316340505061359616',
+        userID: '187877480219148288',
+        nick: 'KaptEinar',
+    });
+}, 5000);
 // When chat messages are received
 bot.on("message", function (user, userID, channelID, message, rawEvent)
 {
@@ -110,6 +117,7 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
         //if the user is marcus, moves him to the afk channel
         gulag.banishPlayer(shortHand, userID);
     }
+
     else if (parameters[0] == "pubg"){
         var playerName = parameters[1]; // store the command for cleaner code/reading
         lastMatch.lastMatch(bot, axios, APIkey, channelID, playerName);
