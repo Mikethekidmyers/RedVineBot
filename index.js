@@ -17,7 +17,12 @@
 //Live mode
 
 // require the different components into the index file
-const Discord = require('discord.io');
+const discordClient = require('dualcord');
+const client = new discordClient();
+client.login({
+    token: botToken, // Used for bot login
+    autorun: true, // Connect immediately
+})
 const axios = require('axios');
 const fs = require('fs');
 
@@ -40,15 +45,19 @@ const inspectGame = require('./components/pubg/inspectGame.js');
 const inspectKD = require('./components/pubg/inspectKD.js');
 const lastCustom = require('./components/pubg/lastCustom.js');
 
+// audio handler
+const audioHandler = require('./components/audio/audioHandler.js');
+
 // Global variables
 let lastSeason = "test";
 let greeting = greetUser.greetUser();
 
 // Events
-const bot = new Discord.Client({
-    token: botToken, // Used for bot login
-    autorun: true, // Connect immediately
-});
+// init discord.io bot
+const bot = client.dioClient();
+
+// init discord.js bot
+const jsBot = client.djsClient();
 
 // When the bot starts
 bot.on('ready', function(event) {
@@ -107,8 +116,10 @@ setInterval( function setNickName(){
 // When chat messages are received
 bot.on("message", function (user, userID, channelID, message, rawEvent)
 {
+    if(bot.users[userID].bot) return;
     //split the command on each space and put it into an array
     let parameters = message.split(" ");
+    let voiceParameters = message.split("!");
 
     //puts all the info about the server the bot is in into a variable
     var shortHand = bot.servers[bot.channels[channelID].guild_id];
@@ -169,6 +180,10 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
     }
     else if (parameters[0] == "redvine" && parameters[1] == "help"){
         help.help(bot, channelID);
+    }
+
+    else if(voiceParameters[0] == ""){
+        audioHandler.audioHandler(jsBot, bot, userID, message, voiceParameters);
     }
 });
 

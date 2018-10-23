@@ -10,7 +10,11 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^0.18.0",
+    "bufferutil": "^4.0.0",
     "discord.io": "github:izy521/discord.io",
+    "dualcord": "^1.0.5",
+    "ffmpeg-binaries": "^4.0.0",
+    "libsodium": "^0.7.3",
     "node-opus": "^0.3.0"
   }
 }
