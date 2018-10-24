@@ -4,7 +4,8 @@
   "description": "A discord bot",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "nodemon": "nodemon index.js"
   },
   "author": "Thomas Basso",
   "license": "MIT",
@@ -16,5 +17,8 @@
     "ffmpeg-binaries": "^4.0.0",
     "libsodium": "^0.7.3",
     "node-opus": "^0.3.0"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.4"
   }
 }

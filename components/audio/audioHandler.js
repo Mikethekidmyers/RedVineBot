@@ -1,19 +1,21 @@
 // handles audio and plays it in a voice channel
-var playing = false;
+
 //local path
 // var path = '/Users/Thomas/desktop/sites/hobby/redvineapp';
 
 // live path
 var path = '/app'
 
-function audioHandler(jsBot, bot, userID, message, voiceParameters){
+function audioHandler(jsBot, bot, userID, message){
+    var voiceParam = message.substring(1);
+    var playing = false;
     jsBot.on('message', message => {
         if(!message.guild) return;
         if(playing == true) return;
         if (message.member.voiceChannel) {
             message.member.voiceChannel.join()
         .then(connection => { // Connection is an instance of VoiceConnection
-            if(voiceParameters[0] == "" && voiceParameters[1] == "hi"){
+            if(voiceParam == "hi"){
                 let audioGreeting = Math.floor((Math.random() * 3) + 1);
                 switch (audioGreeting) {
                     case 1:
@@ -28,7 +30,7 @@ function audioHandler(jsBot, bot, userID, message, voiceParameters){
                     default:
                 }
             } else {
-                switch (voiceParameters[1]){
+                switch (voiceParam){
                     case "yalla":
                     var voicePath = path + '/audiofiles/yalla.mp3';
                     break;
@@ -60,7 +62,7 @@ function audioHandler(jsBot, bot, userID, message, voiceParameters){
             playing = true;
             const dispatcher = connection.playFile(voicePath);
 
-            if (voiceParameters[0] == "" && voiceParameters[1] == "dc"){
+            if (voiceParam == "dc"){
                 message.member.voiceChannel.leave();
             }
 

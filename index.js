@@ -1,19 +1,19 @@
 // https://izy521.github.io/discord.io-docs/Discord.Client.html#editChannelInfo
 //Dev mode
-    // const config = require('./config.js');
-    // const clientId = config.clientId;
-    // const clientSecret = config.clientSecret;
-    // const botUsername = config.botUsername;
-    // const botToken = config.botToken;
-    // const APIkey = config.APIkey;
+    const config = require('./config.js');
+    const clientId = config.clientId;
+    const clientSecret = config.clientSecret;
+    const botUsername = config.botUsername;
+    const botToken = config.botToken;
+    const APIkey = config.APIkey;
 //Dev mode
 
 //Live mode
-    const clientId = process.env.clientId;
-    const clientSecret = process.env.clientSecret;
-    const botUsername = process.env.botUsername;
-    const botToken = process.env.botToken;
-    const APIkey = process.env.APIkey;
+    // const clientId = process.env.clientId;
+    // const clientSecret = process.env.clientSecret;
+    // const botUsername = process.env.botUsername;
+    // const botToken = process.env.botToken;
+    // const APIkey = process.env.APIkey;
 //Live mode
 
 // require the different components into the index file
@@ -87,10 +87,12 @@ bot.on('message', (data) => {
 
 // sets the bots inital presence
 function initialPresence(){
-    bot.setPresence({
+    var presenceVar = presence.presenceRotator();
+    console.log(presenceVar);
+    jsBot._setPresence({
         game: {
             type: 1,
-            name: presence.presenceRotator(),
+            name: presenceVar
         }
     });
 }
@@ -119,7 +121,6 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
     if(bot.users[userID].bot) return;
     //split the command on each space and put it into an array
     let parameters = message.split(" ");
-    let voiceParameters = message.split("!");
 
     //puts all the info about the server the bot is in into a variable
     var shortHand = bot.servers[bot.channels[channelID].guild_id];
@@ -182,8 +183,8 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
         help.help(bot, channelID);
     }
 
-    else if(voiceParameters[0] == ""){
-        audioHandler.audioHandler(jsBot, bot, userID, message, voiceParameters);
+    else if(message.substring(0,1) == "!"){
+        audioHandler.audioHandler(jsBot, bot, userID, message);
     }
 });
 
