@@ -1,19 +1,19 @@
 // https://izy521.github.io/discord.io-docs/Discord.Client.html#editChannelInfo
 //Dev mode
-    // const config = require('./config.js');
-    // const clientId = config.clientId;
-    // const clientSecret = config.clientSecret;
-    // const botUsername = config.botUsername;
-    // const botToken = config.botToken;
-    // const APIkey = config.APIkey;
+    const config = require('./config.js');
+    const clientId = config.clientId;
+    const clientSecret = config.clientSecret;
+    const botUsername = config.botUsername;
+    const botToken = config.botToken;
+    const APIkey = config.APIkey;
 //Dev mode
 
 //Live mode
-    const clientId = process.env.clientId;
-    const clientSecret = process.env.clientSecret;
-    const botUsername = process.env.botUsername;
-    const botToken = process.env.botToken;
-    const APIkey = process.env.APIkey;
+    // const clientId = process.env.clientId;
+    // const clientSecret = process.env.clientSecret;
+    // const botUsername = process.env.botUsername;
+    // const botToken = process.env.botToken;
+    // const APIkey = process.env.APIkey;
 //Live mode
 
 // require the different components into the index file
@@ -183,7 +183,7 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
         help.help(bot, channelID);
     }
 
-    else if(message.substring(0,1) == "!"){
+    else if(message.substring(0, 1) == "!"){
         audioHandler.audioHandler(jsBot, bot, userID, message);
     }
 });

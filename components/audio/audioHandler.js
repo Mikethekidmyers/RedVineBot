@@ -1,10 +1,10 @@
 // handles audio and plays it in a voice channel
 
 //local path
-// var path = '/Users/Thomas/desktop/sites/hobby/redvineapp';
+var path = '/Users/Thomas/desktop/sites/hobby/redvineapp';
 
 // live path
-var path = '/app'
+// var path = '/app'
 
 function audioHandler(jsBot, bot, userID, message){
     var voiceParam = message.substring(1);
@@ -28,6 +28,7 @@ function audioHandler(jsBot, bot, userID, message){
                         var voicePath = path + '/audiofiles/workwork.mp3';
                         break;
                     default:
+                        return;
                 }
             } else {
                 switch (voiceParam){
@@ -56,6 +57,8 @@ function audioHandler(jsBot, bot, userID, message){
                     break;
 
                     default:
+                    var voicePath = path + 'audiofiles/xfiles.mp3';
+                    break;
                 }
             }
 
