@@ -2,7 +2,7 @@ const getPlayerSeason = require('./subcomponents/getPlayerSeason.js');
 
 // get season stats
 
-function seasonStats(bot, axios, APIkey, channelID, playerName, gameMode){
+function seasonStats(bot, axios, APIkey, channelID, playerName, currentSeason, gameMode){
 
     axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/players?filter[playerNames]=${playerName}`, {
         timeout: 3000,
@@ -17,7 +17,7 @@ function seasonStats(bot, axios, APIkey, channelID, playerName, gameMode){
 
     const accountID = res.data.data[0].id;
 
-    getPlayerSeason.getPlayerSeason(bot, axios, APIkey, channelID, playerName, accountID, gameMode);
+    getPlayerSeason.getPlayerSeason(bot, axios, APIkey, channelID, playerName, accountID, currentSeason, gameMode);
 
     })
     .catch(error =>{

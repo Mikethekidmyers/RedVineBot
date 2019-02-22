@@ -1,6 +1,6 @@
-function getPlayerSeason(bot, axios, APIkey, channelID, playerName, accountID, gameMode){
+function getPlayerSeason(bot, axios, APIkey, channelID, playerName, accountID, currentSeason, gameMode){
 
-    axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/players/${accountID}/seasons/${lastSeason}`, {
+    axios.get(`https://api.playbattlegrounds.com/shards/pc-eu/players/${accountID}/seasons/${currentSeason}`, {
         timeout: 3000,
         headers: {
         'Authorization': APIkey,

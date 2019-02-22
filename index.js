@@ -1,20 +1,18 @@
 // https://izy521.github.io/discord.io-docs/Discord.Client.html#editChannelInfo
-//Dev mode
+
+//Dev mode env config
     // const config = require('./config.js');
     // const clientId = config.clientId;
     // const clientSecret = config.clientSecret;
     // const botUsername = config.botUsername;
     // const botToken = config.botToken;
     // const APIkey = config.APIkey;
-//Dev mode
-
-//Live mode
+// Live mode env config
     const clientId = process.env.clientId;
     const clientSecret = process.env.clientSecret;
     const botUsername = process.env.botUsername;
     const botToken = process.env.botToken;
     const APIkey = process.env.APIkey;
-//Live mode
 
 // require the different components into the index file
 const Discord = require('discord.io');
@@ -41,12 +39,12 @@ const inspectKD = require('./components/pubg/inspectKD.js');
 const lastCustom = require('./components/pubg/lastCustom.js');
 
 // Global variables
-let lastSeason = "test";
-let greeting = greetUser.greetUser();
+var lastSeason = "test";
+var greeting = greetUser.greetUser();
 
 // Events
 const bot = new Discord.Client({
-    token: botToken, // Used for bot login
+    token: botToken, // Used for bot identity
     autorun: true, // Connect immediately
 });
 
@@ -54,7 +52,7 @@ const bot = new Discord.Client({
 bot.on('ready', function(event) {
     console.log('Logged in as %s - %s\n', bot.username, bot.id);
     initialPresence();
-    getSeasons.getSeasons(axios, APIkey);
+    const currentSeason = getSeasons.getSeasons(axios, APIkey);
 
     bot.sendMessage({
         to: greeting.helloChannel,
@@ -97,28 +95,16 @@ setInterval( function setPresence(){
     });
 }, 180000);
 
-setInterval( function setNickName(){
-    bot.editNickname({
-        serverID: '316340505061359616',
-        userID: '187877480219148288',
-        nick: 'KaptEinar',
-    });
-}, 5000);
 // When chat messages are received
 bot.on("message", function (user, userID, channelID, message, rawEvent)
 {
     //split the command on each space and put it into an array
-    let parameters = message.split(" ");
+    var parameters = message.split(" ");
 
     //puts all the info about the server the bot is in into a variable
     var shortHand = bot.servers[bot.channels[channelID].guild_id];
 
-    if(userID == '142373989770199040'){
-        //if the user is marcus, moves him to the afk channel
-        gulag.banishPlayer(shortHand, userID);
-    }
-
-    else if (parameters[0] == "pubg"){
+    if (parameters[0] == "pubg"){
         var playerName = parameters[1]; // store the command for cleaner code/reading
         lastMatch.lastMatch(bot, axios, APIkey, channelID, playerName);
     }
@@ -147,17 +133,17 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
             if(parameters[1] == "solo"){
                 var gameMode = parameters[1];
                 var playerName = parameters[2];
-                seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, gameMode);
+                seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, currentSeason, gameMode);
             }
             else if(parameters[1] == "duo"){
                 var gameMode = parameters[1];
                 var playerName = parameters[2];
-                seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, gameMode);
+                seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, currentSeason, gameMode);
             }
             else if(parameters[1] == "squad"){
                 var gameMode = parameters[1];
                 var playerName = parameters[2];
-                seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, gameMode);
+                seasonStats.seasonStats(bot, axios, APIkey, channelID, playerName, currentSeason, gameMode);
         }
     }
     else if (parameters[0] == "drop"){
@@ -171,5 +157,3 @@ bot.on("message", function (user, userID, channelID, message, rawEvent)
         help.help(bot, channelID);
     }
 });
-
-// end of file

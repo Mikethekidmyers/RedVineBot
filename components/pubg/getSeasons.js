@@ -14,9 +14,9 @@ function getSeasons(axios, APIkey){
 
         var seasonArray = res.data.data;
 
-        lastSeason = res.data.data[seasonArray.length -1].id;
+        currentSeason = res.data.data[seasonArray.length -1].id;
 
-        console.log(lastSeason);
+        console.log('Current season is: ', currentSeason);
     })
     .catch(error =>{
         console.log('getSeasons', error);
